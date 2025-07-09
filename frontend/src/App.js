@@ -110,10 +110,11 @@ function App() {
         Legit Projects. Legit People. Legit Impact.
       </span>
       <h1 className="font-heading text-5xl md:text-6xl mb-6 text-legitGold drop-shadow animate-fadein" style={{ animationDelay: '0.3s', lineHeight: 1.1 }}>
-        The Legit: Where Creativity Becomes Legendary
+        The Legit:<br />Where Creativity Becomes Legendary
       </h1>
       <p className="font-body text-text text-lg md:text-xl mb-8 animate-fadein" style={{ animationDelay: '0.4s' }}>
-        Submit your project, vote for your favorites, and discover what’s truly legit. Join a community celebrating authenticity, creativity, and action.
+        Submit your project, vote for your favorites,<br />
+        and discover what’s truly legit. Join a community celebrating authenticity, creativity, and action.
       </p>
       <button
         onClick={scrollToSubmit}
