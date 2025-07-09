@@ -263,7 +263,7 @@ function App() {
       {/* Modal for full project info */}
       {modalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setModalProject(null)}>
-          <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
             <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setModalProject(null)}>&times;</button>
             {modalProject.image && (
               <img src={`${process.env.REACT_APP_API_URL}${modalProject.image}`} alt={modalProject.title} className="w-full h-80 object-cover rounded-xl mb-6 shadow-lg" />
@@ -271,7 +271,7 @@ function App() {
             <h2 className="font-heading text-3xl text-legitGold mb-2 text-center">{modalProject.title}</h2>
             <p className="font-body text-secondary text-center mb-4 text-lg">{modalProject.fullDescription}</p>
             {modalProject.social && (
-              <a href={modalProject.social} target="_blank" rel="noopener noreferrer" className="block text-glitch text-center mb-2 underline">{modalProject.social}</a>
+              <a href={modalProject.social} target="_blank" rel="noopener noreferrer" className="block text-glitch text-center mb-2 underline break-all">{modalProject.social}</a>
             )}
             <div className="flex items-center justify-center gap-4 mt-4">
               <span className="font-body text-legitGold text-lg">Votes: {modalProject.votes || 0}</span>
