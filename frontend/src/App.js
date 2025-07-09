@@ -85,11 +85,13 @@ function NavBar() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur border-b border-secondary flex justify-center gap-8 py-3 px-4 text-legitGold font-heading text-lg shadow-lg">
-      <button onClick={() => scrollTo('home')} className="hover:text-glitch transition">Home</button>
-      <button onClick={() => scrollTo('about')} className="hover:text-glitch transition">About</button>
-      <button onClick={() => scrollTo('gallery')} className="hover:text-glitch transition">Gallery</button>
-      <button onClick={() => scrollTo('submit')} className="hover:text-glitch transition">Submit</button>
+    <nav className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur border-b border-secondary flex items-center justify-between py-3 px-8 text-legitGold font-heading text-lg shadow-lg">
+      <div className="text-3xl font-heading text-legitGold tracking-wide select-none cursor-pointer" onClick={() => scrollTo('home')}>The Legit</div>
+      <div className="flex gap-8">
+        <button onClick={() => scrollTo('about')} className="hover:text-glitch transition">About</button>
+        <button onClick={() => scrollTo('gallery')} className="hover:text-glitch transition">Gallery</button>
+        <button onClick={() => scrollTo('submit')} className="hover:text-glitch transition">Submit</button>
+      </div>
     </nav>
   );
 }
@@ -101,25 +103,13 @@ function App() {
     submitRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Hero section with animated graffiti icon
+  // Modernized Hero Section (moved inside App for scope)
   const homeSection = (
-    <section id="home" className="w-full flex flex-col items-center justify-center p-8 pt-24 max-w-5xl mx-auto">
-      {/* Urban background SVG (faint city/graffiti silhouette) */}
-      <svg
-        className="absolute bottom-0 left-0 w-full h-32 opacity-10 pointer-events-none"
-        viewBox="0 0 1440 320"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fill="#fff"
-          d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,154.7C672,160,768,192,864,197.3C960,203,1056,181,1152,181.3C1248,181,1344,203,1392,213.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-        />
-      </svg>
-      <h1 className="font-heading text-5xl mb-4 text-legitGold drop-shadow animate-fadein relative z-10" style={{ animationDelay: '0.2s' }}>The Legit</h1>
-      <h2 className="font-accent text-2xl mb-2 text-glitch animate-fadein relative z-10" style={{ animationDelay: '0.4s' }}>Urban × Mythical × Minimal</h2>
-      <p className="font-body text-lg max-w-xl text-secondary text-center mb-8 animate-fadein relative z-10" style={{ animationDelay: '0.6s' }}>
-        Welcome to The Legit — a creative movement and real-world game celebrating authenticity, creativity, and community action. Submit your project, vote for your favorites, and discover what’s truly legit.
+    <section id="home" className="w-full flex flex-col items-center justify-center p-8 pt-32 max-w-5xl mx-auto">
+      <h2 className="font-accent text-2xl mb-2 text-glitch animate-fadein relative z-10" style={{ animationDelay: '0.2s' }}>Urban × Mythical × Minimal</h2>
+      <h1 className="font-heading text-5xl mb-4 text-legitGold drop-shadow animate-fadein relative z-10 text-center" style={{ animationDelay: '0.3s' }}>A Creative Movement & Real-World Game</h1>
+      <p className="font-body text-lg max-w-2xl text-secondary text-center mb-8 animate-fadein relative z-10" style={{ animationDelay: '0.4s' }}>
+        Submit your project, vote for your favorites, and discover what’s truly legit. Join a community celebrating authenticity, creativity, and action.
       </p>
       <button
         onClick={scrollToSubmit}
@@ -324,29 +314,6 @@ function App() {
       alert('Submission failed.');
     }
   };
-  const submitSection = (
-    <section id="submit" ref={submitRef} className="w-full flex flex-col items-center justify-center p-8 max-w-2xl mx-auto">
-      <h1 className="font-heading text-4xl mb-4 text-legitGold animate-fadein">Submit Your Project</h1>
-      <form onSubmit={handleSubmit} className="bg-[#181818] p-8 rounded-lg shadow-lg flex flex-col gap-4 w-full max-w-md animate-fadein">
-        <label className="font-body text-secondary">Project Title
-          <input name="title" type="text" value={form.title} onChange={handleChange} required className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
-        </label>
-        <label className="font-body text-secondary">Short Description (max 50 chars)
-          <input name="shortDescription" type="text" value={form.shortDescription} onChange={handleChange} required maxLength={50} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
-        </label>
-        <label className="font-body text-secondary">Full Description
-          <textarea name="fullDescription" value={form.fullDescription} onChange={handleChange} required rows={4} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
-        </label>
-        <label className="font-body text-secondary">Image
-          <input name="image" type="file" accept="image/*" onChange={handleChange} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
-        </label>
-        <label className="font-body text-secondary">Social Link (Instagram, etc)
-          <input name="social" type="url" value={form.social} onChange={handleChange} placeholder="https://instagram.com/yourproject" className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
-        </label>
-        <button type="submit" className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow hover:bg-glitch transition mt-4 focus:outline-none focus:ring-2 focus:ring-legitGold">Submit</button>
-      </form>
-    </section>
-  );
 
   // Back to top button
   const [showTop, setShowTop] = React.useState(false);
@@ -418,7 +385,27 @@ function App() {
       {divider}
       {gallerySection}
       {divider}
-      {submitSection}
+      <section id="submit" ref={submitRef} className="w-full flex flex-col items-center justify-center p-8 max-w-2xl mx-auto">
+        <h1 className="font-heading text-4xl mb-4 text-legitGold animate-fadein">Submit Your Project</h1>
+        <form onSubmit={handleSubmit} className="bg-[#181818] p-8 rounded-lg shadow-lg flex flex-col gap-4 w-full max-w-md animate-fadein">
+          <label className="font-body text-secondary">Project Title
+            <input name="title" type="text" value={form.title} onChange={handleChange} required className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+          </label>
+          <label className="font-body text-secondary">Short Description (max 50 chars)
+            <input name="shortDescription" type="text" value={form.shortDescription} onChange={handleChange} required maxLength={50} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+          </label>
+          <label className="font-body text-secondary">Full Description
+            <textarea name="fullDescription" value={form.fullDescription} onChange={handleChange} required rows={4} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+          </label>
+          <label className="font-body text-secondary">Image
+            <input name="image" type="file" accept="image/*" onChange={handleChange} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+          </label>
+          <label className="font-body text-secondary">Social Link (Instagram, etc)
+            <input name="social" type="url" value={form.social} onChange={handleChange} placeholder="https://instagram.com/yourproject" className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+          </label>
+          <button type="submit" className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow hover:bg-glitch transition mt-4 focus:outline-none focus:ring-2 focus:ring-legitGold">Submit</button>
+        </form>
+      </section>
       <footer className="w-full text-center py-8 text-secondary text-sm opacity-80 font-body mt-8 border-t border-secondary flex flex-col items-center gap-4">
         <div className="flex gap-4 justify-center mb-2">
           {socials.map((s) => (
