@@ -91,42 +91,47 @@ app.get('/projects', async (req, res) => {
 
 // Submit a new project (max 3 per IP, not approved by default)
 app.post('/projects', upload.any(), async (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const count = await Project.countDocuments({ createdByIP: ip });
-  if (count >= 3) {
-    return res.status(403).json({ success: false, message: 'You have reached the submission limit for this IP.' });
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const count = await Project.countDocuments({ createdByIP: ip });
+    if (count >= 3) {
+      return res.status(403).json({ success: false, message: 'You have reached the submission limit for this IP.' });
+    }
+    let imageFile = null;
+    if (req.files && req.files.length > 0) {
+      imageFile = req.files.find(f => f.fieldname === 'image');
+    }
+    let { title, shortDescription, fullDescription, social, description } = req.body;
+    if (!title || !shortDescription || !fullDescription) {
+      try {
+        const parsed = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        title = title || parsed.title;
+        shortDescription = shortDescription || parsed.shortDescription || parsed.description;
+        fullDescription = fullDescription || parsed.fullDescription || parsed.description;
+        social = social || parsed.social;
+      } catch (e) {}
+    }
+    const shortDesc = shortDescription || description || '';
+    const fullDesc = fullDescription || description || '';
+    if (!title || !shortDesc || !fullDesc) {
+      return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    }
+    const project = new Project({
+      title,
+      shortDescription: shortDesc,
+      fullDescription: fullDesc,
+      social,
+      image: imageFile ? `/uploads/${imageFile.filename}` : null,
+      createdByIP: ip,
+      approved: false,
+      editCount: 0,
+    });
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error('Error in /projects POST:', err);
+    res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
   }
-  let imageFile = null;
-  if (req.files && req.files.length > 0) {
-    imageFile = req.files.find(f => f.fieldname === 'image');
-  }
-  let { title, shortDescription, fullDescription, social, description } = req.body;
-  if (!title || !shortDescription || !fullDescription) {
-    try {
-      const parsed = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      title = title || parsed.title;
-      shortDescription = shortDescription || parsed.shortDescription || parsed.description;
-      fullDescription = fullDescription || parsed.fullDescription || parsed.description;
-      social = social || parsed.social;
-    } catch (e) {}
-  }
-  const shortDesc = shortDescription || description || '';
-  const fullDesc = fullDescription || description || '';
-  if (!title || !shortDesc || !fullDesc) {
-    return res.status(400).json({ success: false, message: 'Missing required fields.' });
-  }
-  const project = new Project({
-    title,
-    shortDescription: shortDesc,
-    fullDescription: fullDesc,
-    social,
-    image: imageFile ? `/uploads/${imageFile.filename}` : null,
-    createdByIP: ip,
-    approved: false,
-    editCount: 0,
-  });
-  await project.save();
-  res.json({ success: true, project });
 });
 
 app.delete('/projects/:id', async (req, res) => {
