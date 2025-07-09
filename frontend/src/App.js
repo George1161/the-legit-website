@@ -34,7 +34,7 @@ function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNomina
         <span className="absolute top-6 right-6 bg-legitGold text-background font-heading px-4 py-2 rounded-full text-base shadow animate-pulse-badge">Legit Pick</span>
       )}
       {project.image ? (
-        <img src={`http://localhost:4000${project.image}`} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
+        <img src={`${process.env.REACT_APP_API_URL}${project.image}`} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
       ) : (
         <div className="w-48 h-48 bg-secondary rounded-xl mb-6 flex items-center justify-center text-background font-accent text-4xl">IMG</div>
       )}
@@ -186,7 +186,7 @@ function App() {
   });
   const fetchProjects = React.useCallback(() => {
     setLoading(true);
-    fetch('http://localhost:4000/projects')
+    fetch(`${process.env.REACT_APP_API_URL}/projects`)
       .then((res) => res.json())
       .then((data) => {
         setProjects(data);
@@ -200,7 +200,7 @@ function App() {
   const handleVote = async (id) => {
     setVoting((v) => ({ ...v, [id]: true }));
     try {
-      const res = await fetch('http://localhost:4000/vote', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
@@ -266,7 +266,7 @@ function App() {
           <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein" onClick={e => e.stopPropagation()}>
             <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setModalProject(null)}>&times;</button>
             {modalProject.image && (
-              <img src={`http://localhost:4000${modalProject.image}`} alt={modalProject.title} className="w-full h-80 object-cover rounded-xl mb-6 shadow-lg" />
+              <img src={`${process.env.REACT_APP_API_URL}${modalProject.image}`} alt={modalProject.title} className="w-full h-80 object-cover rounded-xl mb-6 shadow-lg" />
             )}
             <h2 className="font-heading text-3xl text-legitGold mb-2 text-center">{modalProject.title}</h2>
             <p className="font-body text-secondary text-center mb-4 text-lg">{modalProject.fullDescription}</p>
@@ -309,7 +309,7 @@ function App() {
       if (form.image) {
         formData.append('image', form.image);
       }
-      const res = await fetch('http://localhost:4000/projects', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/projects`, {
         method: 'POST',
         body: formData,
       });
@@ -451,7 +451,7 @@ function Admin() {
 
   React.useEffect(() => {
     if (!loggedIn) return;
-    fetch('http://localhost:4000/projects')
+    fetch(`${process.env.REACT_APP_API_URL}/projects`)
       .then((res) => res.json())
       .then((data) => {
         setProjects(data);
@@ -461,7 +461,7 @@ function Admin() {
   }, [loggedIn]);
 
   const handleNominate = async (id) => {
-    const res = await fetch('http://localhost:4000/nominate', {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/nominate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
@@ -474,7 +474,7 @@ function Admin() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this project?')) return;
-    const res = await fetch('http://localhost:4000/projects/' + id, { method: 'DELETE' });
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/` + id, { method: 'DELETE' });
     if (res.ok) {
       setProjects((prev) => prev.filter((p) => p.id !== id));
     }
@@ -482,14 +482,14 @@ function Admin() {
 
   const handleClearVotes = async (id) => {
     if (!window.confirm('Clear all votes for this project?')) return;
-    const res = await fetch(`http://localhost:4000/clear-votes`, {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/clear-votes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
     if (res.ok) {
       // Refetch all projects to ensure UI is in sync
-      const projectsRes = await fetch('http://localhost:4000/projects');
+      const projectsRes = await fetch(`${process.env.REACT_APP_API_URL}/projects`);
       const projectsData = await projectsRes.json();
       setProjects(projectsData);
     }
