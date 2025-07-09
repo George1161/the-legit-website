@@ -105,7 +105,7 @@ function App() {
 
   // Modernized Hero Section (left-aligned, minimal, professional)
   const homeSection = (
-    <section id="home" className="w-full flex flex-col items-start justify-center pl-32 pt-40 max-w-lg min-h-[60vh]">
+    <section id="home" className="w-full flex flex-col items-start justify-center pl-40 pt-40 min-h-[60vh]">
       <span className="text-base font-semibold text-glitch mb-2 tracking-widest uppercase animate-fadein" style={{ animationDelay: '0.2s' }}>
         Legit Projects. Legit People. Legit Impact.
       </span>
