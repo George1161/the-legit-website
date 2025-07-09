@@ -133,20 +133,20 @@ function App() {
           <span className="text-3xl md:text-4xl">🔮</span>
           <h2 className="font-heading text-3xl md:text-4xl text-legitGold drop-shadow">About The Legit</h2>
         </div>
-        <p className="font-body text-secondary text-lg text-center mb-4">
+        <p className="font-body text-text text-lg text-center mb-4">
           The Legit is a creative movement, community game, and underground support system built to spotlight everything truly real.
         </p>
-        <p className="font-body text-secondary text-base text-center mb-2">
+        <p className="font-body text-text text-base text-center mb-2">
           We support legit people — artists, builders, hustlers, visionaries — through interactive quests, real-world challenges, and biweekly giveaways.
         </p>
-        <p className="font-body text-secondary text-base text-center mb-2">
+        <p className="font-body text-text text-base text-center mb-2">
           Whether it’s a bold idea, a passion project, or a small business with soul, if it’s authentic, we see it.<br/>
           We don’t chase hype. We follow truth, creativity, and hustle.
         </p>
-        <p className="font-body text-secondary text-base text-center mb-2">
+        <p className="font-body text-text text-base text-center mb-2">
           Through QR-coded missions, anonymous street characters, and meme-fueled riddles, The Legit turns cities into playgrounds and strangers into allies.
         </p>
-        <p className="font-body text-secondary text-base text-center mb-2">
+        <p className="font-body text-text text-base text-center mb-2">
           This is more than content. It’s a culture.
         </p>
         <p className="font-body text-legitGold text-lg text-center font-bold mb-2">
