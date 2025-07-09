@@ -8,7 +8,14 @@ import fsSync from 'fs';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://the-legit-website.vercel.app',
+    'https://the-legit-website-qyorpolyq-george1161.vercel.app',
+    'https://the-legit-website-qyorpolyq-georges-projects-03f347f5.vercel.app'
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 
 // Multer setup for image uploads
