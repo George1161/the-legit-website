@@ -13,7 +13,8 @@ app.use(cors({
     'https://the-legit-website.vercel.app',
     'https://the-legit-website-qyorpolyq-george1161.vercel.app',
     'https://the-legit-website-qyorpolyq-georges-projects-03f347f5.vercel.app',
-    'https://the-legit-website-7eq2waeh5-georges-projects-03f347f5.vercel.app'
+    'https://the-legit-website-7eq2waeh5-georges-projects-03f347f5.vercel.app',
+    'https://the-legit-website-pofj73ki7-georges-projects-03f347f5.vercel.app'
   ],
   credentials: true,
 }));
