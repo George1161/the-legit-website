@@ -55,67 +55,17 @@ const projectSchema = new mongoose.Schema({
 });
 const Project = mongoose.model('Project', projectSchema);
 
-// In-memory IP vote tracking: { projectId: Set of IPs }
-let voteIPs = {};
-
-const PROJECTS_FILE = 'projects.json';
-const VOTE_IPS_FILE = 'voteIPs.json';
+// Vote schema for per-IP voting restriction
+const voteSchema = new mongoose.Schema({
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+  ip: String,
+});
+const Vote = mongoose.model('Vote', voteSchema);
 
 // Ensure uploads directory exists
 const UPLOADS_DIR = 'uploads';
 if (!fsSync.existsSync(UPLOADS_DIR)) {
   fsSync.mkdirSync(UPLOADS_DIR);
-}
-// Ensure projects.json exists and is valid
-try {
-  if (!fsSync.existsSync(PROJECTS_FILE)) {
-    fsSync.writeFileSync(PROJECTS_FILE, '[]');
-  } else {
-    // Try to parse to ensure it's valid JSON
-    JSON.parse(fsSync.readFileSync(PROJECTS_FILE, 'utf-8'));
-  }
-} catch (e) {
-  fsSync.writeFileSync(PROJECTS_FILE, '[]');
-}
-
-// Load projects from file
-async function loadProjects() {
-  try {
-    const data = await fs.readFile(PROJECTS_FILE, 'utf-8');
-    projects = JSON.parse(data);
-    nextId = projects.reduce((max, p) => Math.max(max, p.id), 0) + 1;
-  } catch {
-    projects = [];
-    nextId = 1;
-  }
-}
-
-// Save projects to file
-async function saveProjects() {
-  await fs.writeFile(PROJECTS_FILE, JSON.stringify(projects, null, 2));
-}
-
-// Load vote IPs from file
-async function loadVoteIPs() {
-  try {
-    const data = await fs.readFile(VOTE_IPS_FILE, 'utf-8');
-    const obj = JSON.parse(data);
-    voteIPs = {};
-    for (const [projectId, ipArr] of Object.entries(obj)) {
-      voteIPs[projectId] = new Set(ipArr);
-    }
-  } catch {
-    voteIPs = {};
-  }
-}
-
-// Save vote IPs to file
-async function saveVoteIPs() {
-  const obj = {};
-  for (const [projectId, ipSet] of Object.entries(voteIPs)) {
-    obj[projectId] = Array.from(ipSet);
-  }
-  await fs.writeFile(VOTE_IPS_FILE, JSON.stringify(obj, null, 2));
 }
 
 // Connect to MongoDB
@@ -124,9 +74,9 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // On server start, load projects
-loadProjects();
+// Remove: loadProjects();
 // On server start, load vote IPs
-loadVoteIPs();
+// Remove: loadVoteIPs();
 
 // Health check
 app.get('/', (req, res) => {
@@ -180,13 +130,10 @@ app.post('/projects', upload.any(), async (req, res) => {
 });
 
 app.delete('/projects/:id', async (req, res) => {
-  const id = Number(req.params.id);
-  const index = projects.findIndex((p) => p.id === id);
-  if (index === -1) {
+  const project = await Project.findByIdAndDelete(req.params.id);
+  if (!project) {
     return res.status(404).json({ success: false, message: 'Project not found.' });
   }
-  projects.splice(index, 1);
-  await saveProjects();
   res.json({ success: true });
 });
 
@@ -227,10 +174,8 @@ app.put('/projects/:id', upload.any(), async (req, res) => {
 });
 
 app.post('/vote', async (req, res) => {
-  console.log('Received a vote request', req.body);
   const { id } = req.body;
-  const projectId = String(id); // Always use string
-  const project = projects.find((p) => String(p.id) === projectId);
+  const project = await Project.findById(id);
   if (!project) {
     return res.status(404).json({ success: false, message: 'Project not found.' });
   }
@@ -238,41 +183,36 @@ app.post('/vote', async (req, res) => {
   if (Array.isArray(ip)) ip = ip[0];
   if (typeof ip === 'string' && ip.includes(',')) ip = ip.split(',')[0].trim();
   if (ip === '::1') ip = '127.0.0.1';
-
-  voteIPs[projectId] = voteIPs[projectId] || new Set();
-  console.log('Voting IP:', ip, 'Current IPs for project', projectId, ':', Array.from(voteIPs[projectId]));
-  if (voteIPs[projectId].has(ip)) {
+  const alreadyVoted = await Vote.findOne({ projectId: id, ip });
+  if (alreadyVoted) {
     return res.status(403).json({ success: false, message: 'You have already voted for this project.' });
   }
-  voteIPs[projectId].add(ip);
+  await Vote.create({ projectId: id, ip });
   project.votes += 1;
-  await saveProjects();
-  await saveVoteIPs();
+  await project.save();
   res.json({ success: true, project });
 });
 
 app.post('/nominate', async (req, res) => {
   const { id } = req.body;
-  const project = projects.find((p) => p.id === Number(id));
+  const project = await Project.findById(id);
   if (!project) {
     return res.status(404).json({ success: false, message: 'Project not found.' });
   }
   project.nominated = !project.nominated;
-  await saveProjects();
+  await project.save();
   res.json({ success: true, project });
 });
 
 app.post('/clear-votes', async (req, res) => {
   const { id } = req.body;
-  const projectId = String(id);
-  const project = projects.find((p) => String(p.id) === projectId);
+  const project = await Project.findById(id);
   if (!project) {
     return res.status(404).json({ success: false, message: 'Project not found.' });
   }
   project.votes = 0;
-  voteIPs[projectId] = new Set();
-  await saveProjects();
-  await saveVoteIPs();
+  await project.save();
+  await Vote.deleteMany({ projectId: id });
   res.json({ success: true, project });
 });
 
