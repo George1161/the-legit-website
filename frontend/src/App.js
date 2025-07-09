@@ -112,7 +112,7 @@ function App() {
       <h1 className="font-heading text-5xl md:text-6xl mb-6 text-legitGold drop-shadow animate-fadein" style={{ animationDelay: '0.3s', lineHeight: 1.1 }}>
         The Legit: Where Creativity Becomes Legendary
       </h1>
-      <p className="font-body text-lg md:text-xl text-secondary mb-8 max-w-2xl animate-fadein" style={{ animationDelay: '0.4s' }}>
+      <p className="font-body text-text text-lg md:text-xl mb-8 max-w-2xl animate-fadein" style={{ animationDelay: '0.4s' }}>
         Submit your project, vote for your favorites, and discover what’s truly legit. Join a community celebrating authenticity, creativity, and action.
       </p>
       <button
