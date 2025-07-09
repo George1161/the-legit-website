@@ -103,17 +103,21 @@ function App() {
     submitRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Modernized Hero Section (moved inside App for scope)
+  // Modernized Hero Section (left-aligned, minimal, professional)
   const homeSection = (
-    <section id="home" className="w-full flex flex-col items-center justify-center p-8 pt-32 max-w-5xl mx-auto">
-      <h2 className="font-accent text-2xl mb-2 text-glitch animate-fadein relative z-10" style={{ animationDelay: '0.2s' }}>Urban × Mythical × Minimal</h2>
-      <h1 className="font-heading text-5xl mb-4 text-legitGold drop-shadow animate-fadein relative z-10 text-center" style={{ animationDelay: '0.3s' }}>A Creative Movement & Real-World Game</h1>
-      <p className="font-body text-lg max-w-2xl text-secondary text-center mb-8 animate-fadein relative z-10" style={{ animationDelay: '0.4s' }}>
+    <section id="home" className="w-full flex flex-col items-start justify-center p-8 pt-40 max-w-4xl mx-auto min-h-[60vh]">
+      <span className="text-base font-semibold text-glitch mb-2 tracking-widest uppercase animate-fadein" style={{ animationDelay: '0.2s' }}>
+        Legit Projects. Legit People. Legit Impact.
+      </span>
+      <h1 className="font-heading text-5xl md:text-6xl mb-6 text-legitGold drop-shadow animate-fadein" style={{ animationDelay: '0.3s', lineHeight: 1.1 }}>
+        The Legit: Where Creativity Becomes Legendary
+      </h1>
+      <p className="font-body text-lg md:text-xl text-secondary mb-8 max-w-2xl animate-fadein" style={{ animationDelay: '0.4s' }}>
         Submit your project, vote for your favorites, and discover what’s truly legit. Join a community celebrating authenticity, creativity, and action.
       </p>
       <button
         onClick={scrollToSubmit}
-        className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow-lg hover:bg-glitch transition mb-8 mt-4 animate-glow relative z-10"
+        className="bg-vote text-background font-bold px-8 py-4 rounded-lg shadow-lg hover:bg-glitch transition focus:outline-none focus:ring-2 focus:ring-legitGold animate-glow"
         style={{ boxShadow: '0 0 16px 2px #FFD700, 0 0 32px 4px #FFD70033' }}
       >
         Submit Your Project
