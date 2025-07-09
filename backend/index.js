@@ -4,6 +4,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -35,9 +38,21 @@ const upload = multer({ storage });
 // Serve uploads as static files
 app.use('/uploads', express.static('uploads'));
 
-// In-memory storage for projects
-let projects = [];
-let nextId = 1;
+// Project schema
+const projectSchema = new mongoose.Schema({
+  title: String,
+  shortDescription: String,
+  fullDescription: String,
+  social: String,
+  image: String,
+  votes: { type: Number, default: 0 },
+  nominated: { type: Boolean, default: false },
+  approved: { type: Boolean, default: false },
+  editCount: { type: Number, default: 0 },
+  createdByIP: String,
+  createdAt: { type: Date, default: Date.now },
+});
+const Project = mongoose.model('Project', projectSchema);
 
 // In-memory IP vote tracking: { projectId: Set of IPs }
 let voteIPs = {};
@@ -102,6 +117,11 @@ async function saveVoteIPs() {
   await fs.writeFile(VOTE_IPS_FILE, JSON.stringify(obj, null, 2));
 }
 
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
+
 // On server start, load projects
 loadProjects();
 // On server start, load vote IPs
@@ -112,18 +132,23 @@ app.get('/', (req, res) => {
   res.send({ status: 'ok', message: 'The Legit backend is running.' });
 });
 
-// Placeholder endpoints
-app.get('/projects', (req, res) => {
+// Public: Get all approved projects
+app.get('/projects', async (req, res) => {
+  const projects = await Project.find({ approved: true }).sort({ createdAt: -1 });
   res.json(projects);
 });
 
+// Submit a new project (max 3 per IP, not approved by default)
 app.post('/projects', upload.any(), async (req, res) => {
-  // Find the image file if present
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const count = await Project.countDocuments({ createdByIP: ip });
+  if (count >= 3) {
+    return res.status(403).json({ success: false, message: 'You have reached the submission limit for this IP.' });
+  }
   let imageFile = null;
   if (req.files && req.files.length > 0) {
     imageFile = req.files.find(f => f.fieldname === 'image');
   }
-  // Try to parse fields from req.body, fallback to JSON if needed
   let { title, shortDescription, fullDescription, social, description } = req.body;
   if (!title || !shortDescription || !fullDescription) {
     try {
@@ -132,29 +157,24 @@ app.post('/projects', upload.any(), async (req, res) => {
       shortDescription = shortDescription || parsed.shortDescription || parsed.description;
       fullDescription = fullDescription || parsed.fullDescription || parsed.description;
       social = social || parsed.social;
-    } catch (e) {
-      console.log('Error parsing req.body as JSON:', e);
-    }
+    } catch (e) {}
   }
-  // Accept legacy 'description' as both if new fields missing
   const shortDesc = shortDescription || description || '';
   const fullDesc = fullDescription || description || '';
   if (!title || !shortDesc || !fullDesc) {
-    console.log('Submission failed: missing fields', { title, shortDesc, fullDesc });
     return res.status(400).json({ success: false, message: 'Missing required fields.' });
   }
-  const project = {
-    id: nextId++,
+  const project = new Project({
     title,
     shortDescription: shortDesc,
     fullDescription: fullDesc,
     social,
     image: imageFile ? `/uploads/${imageFile.filename}` : null,
-    votes: 0,
-    nominated: false,
-  };
-  projects.push(project);
-  await saveProjects();
+    createdByIP: ip,
+    approved: false,
+    editCount: 0,
+  });
+  await project.save();
   res.json({ success: true, project });
 });
 
@@ -167,6 +187,42 @@ app.delete('/projects/:id', async (req, res) => {
   projects.splice(index, 1);
   await saveProjects();
   res.json({ success: true });
+});
+
+app.put('/projects/:id', upload.any(), async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const project = await Project.findById(req.params.id);
+  if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+  if (project.createdByIP !== ip) return res.status(403).json({ success: false, message: 'You can only edit your own project.' });
+  if (project.editCount >= 3) return res.status(403).json({ success: false, message: 'Edit limit reached for this project.' });
+  let imageFile = null;
+  if (req.files && req.files.length > 0) {
+    imageFile = req.files.find(f => f.fieldname === 'image');
+  }
+  let { title, shortDescription, fullDescription, social, description } = req.body;
+  if (!title || !shortDescription || !fullDescription) {
+    try {
+      const parsed = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      title = title || parsed.title;
+      shortDescription = shortDescription || parsed.shortDescription || parsed.description;
+      fullDescription = fullDescription || parsed.fullDescription || parsed.description;
+      social = social || parsed.social;
+    } catch (e) {}
+  }
+  const shortDesc = shortDescription || description || '';
+  const fullDesc = fullDescription || description || '';
+  if (!title || !shortDesc || !fullDesc) {
+    return res.status(400).json({ success: false, message: 'Missing required fields.' });
+  }
+  project.title = title;
+  project.shortDescription = shortDesc;
+  project.fullDescription = fullDesc;
+  project.social = social;
+  if (imageFile) project.image = `/uploads/${imageFile.filename}`;
+  project.editCount += 1;
+  project.approved = false; // Needs admin re-approval
+  await project.save();
+  res.json({ success: true, project });
 });
 
 app.post('/vote', async (req, res) => {
@@ -217,6 +273,31 @@ app.post('/clear-votes', async (req, res) => {
   await saveProjects();
   await saveVoteIPs();
   res.json({ success: true, project });
+});
+
+// Admin: List all unapproved projects
+app.get('/admin/projects', async (req, res) => {
+  // TODO: Add admin authentication
+  const projects = await Project.find({ approved: false }).sort({ createdAt: -1 });
+  res.json(projects);
+});
+
+// Admin: Approve a project
+app.post('/admin/projects/:id/approve', async (req, res) => {
+  // TODO: Add admin authentication
+  const project = await Project.findById(req.params.id);
+  if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+  project.approved = true;
+  await project.save();
+  res.json({ success: true, project });
+});
+
+// Admin: Reject (delete) a project
+app.post('/admin/projects/:id/reject', async (req, res) => {
+  // TODO: Add admin authentication
+  const project = await Project.findByIdAndDelete(req.params.id);
+  if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {
