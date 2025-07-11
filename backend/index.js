@@ -1,3 +1,4 @@
+// FORCE REDEPLOY: Trivial change to ensure Render picks up the latest backend code.
 // Trigger redeploy
 import express from 'express';
 import cors from 'cors';
@@ -228,13 +229,6 @@ app.post('/clear-votes', async (req, res) => {
   await project.save();
   await Vote.deleteMany({ projectId: id });
   res.json({ success: true, project: projectToClient(project) });
-});
-
-// Admin: List all unapproved projects
-app.get('/admin/projects', async (req, res) => {
-  // TODO: Add admin authentication
-  const projects = await Project.find({ approved: false }).sort({ createdAt: -1 });
-  res.json(projects);
 });
 
 // Admin: Get all projects (approved and unapproved)
