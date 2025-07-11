@@ -400,9 +400,18 @@ function App() {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/user-limits`);
       if (res.ok) {
         const data = await res.json();
-        setUserLimits(data);
+        // Defensive: ensure data shape
+        setUserLimits({
+          submissionsRemaining: typeof data.submissionsRemaining === 'number' ? data.submissionsRemaining : 3,
+          totalSubmissions: typeof data.totalSubmissions === 'number' ? data.totalSubmissions : 0,
+          projectEditInfo: Array.isArray(data.projectEditInfo) ? data.projectEditInfo : []
+        });
+      } else {
+        // If endpoint missing, fallback to defaults
+        setUserLimits({ submissionsRemaining: 3, totalSubmissions: 0, projectEditInfo: [] });
       }
     } catch (err) {
+      setUserLimits({ submissionsRemaining: 3, totalSubmissions: 0, projectEditInfo: [] });
       console.error('Error fetching user limits:', err);
     }
   }, []);
@@ -529,8 +538,20 @@ function App() {
         <h1 className="font-heading text-4xl mb-4 text-legitGold animate-fadein">Submit Your Project</h1>
         <div className="bg-[#181818] p-6 rounded-lg shadow-lg mb-4 text-center animate-fadein">
           <p className="font-body text-legitGold text-lg mb-2">
-            Submissions Remaining: <span className="font-bold">{userLimits.submissionsRemaining}</span> / 3
+            Submissions Remaining: <span className="font-bold">{typeof userLimits.submissionsRemaining === 'number' ? userLimits.submissionsRemaining : 3}</span> / 3
           </p>
+          {userLimits && Array.isArray(userLimits.projectEditInfo) && userLimits.projectEditInfo.length > 0 && (
+            <div className="mt-2 text-sm text-secondary">
+              <strong>Your Projects & Edits:</strong>
+              <ul className="mt-1">
+                {userLimits.projectEditInfo.map((p) => (
+                  <li key={p.id || p.title}>
+                    {p.title}: {typeof p.editsRemaining === 'number' ? p.editsRemaining : 3} edits left
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {userLimits.submissionsRemaining === 0 && (
             <p className="font-body text-red-400 text-sm">You have reached your submission limit for this IP address.</p>
           )}
