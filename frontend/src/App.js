@@ -1,3 +1,4 @@
+// FORCE REDEPLOY: Trivial change to trigger Vercel build
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -276,7 +277,6 @@ function App() {
               onVote={handleVote}
               showNominateButton={false}
               onClick={() => setModalProject(project)}
-              onEdit={handleEdit}
               userLimits={userLimits}
               className="w-full max-w-2xl mx-auto"
             />
