@@ -259,7 +259,9 @@ function App() {
           </div>
         </div>
       ) */}
-      {/* loading ? (
+      {/* Debug: Log projects array */}
+      {console.log('Projects in state:', projects)}
+      {loading ? (
         <p className="font-body text-secondary animate-fadein">Loading...</p>
       ) : projects.length === 0 ? (
         <p className="font-body text-secondary animate-fadein">No projects submitted yet.</p>
@@ -280,7 +282,7 @@ function App() {
             />
           ))}
         </div>
-      ) */}
+      )}
       {/* Modal for full project info */}
       {/* modalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setModalProject(null)}>
