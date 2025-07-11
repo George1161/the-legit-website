@@ -34,7 +34,7 @@ function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNomina
         <span className="absolute top-6 right-6 bg-legitGold text-background font-heading px-4 py-2 rounded-full text-base shadow animate-pulse-badge">Legit Pick</span>
       )}
       {project.image ? (
-        <img src={`${process.env.REACT_APP_API_URL}${project.image}`} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
+        <img src={project.image} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
       ) : (
         <div className="w-48 h-48 bg-secondary rounded-xl mb-6 flex items-center justify-center text-background font-accent text-4xl">IMG</div>
       )}
@@ -261,7 +261,7 @@ function App() {
           <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
             <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setModalProject(null)}>&times;</button>
             {modalProject.image && (
-              <img src={`${process.env.REACT_APP_API_URL}${modalProject.image}`} alt={modalProject.title} className="w-full h-80 object-cover rounded-xl mb-6 shadow-lg" />
+              <img src={modalProject.image} alt={modalProject.title} className="w-full h-80 object-cover rounded-xl mb-6 shadow-lg" />
             )}
             <h2 className="font-heading text-3xl text-legitGold mb-2 text-center">{modalProject.title}</h2>
             <p className="font-body text-secondary text-center mb-4 text-lg">{modalProject.fullDescription}</p>
