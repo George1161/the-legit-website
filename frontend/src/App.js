@@ -315,7 +315,7 @@ function App() {
         <p className="font-body text-secondary animate-fadein">No projects submitted yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 w-full max-w-7xl">
-          {projects.map((project) => (
+          {Array.isArray(projects) && projects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
@@ -546,7 +546,7 @@ function App() {
             <div className="mt-2 text-sm text-secondary">
               <strong>Your Projects & Edits:</strong>
               <ul className="mt-1">
-                {userLimits.projectEditInfo.map((p) => (
+                {Array.isArray(userLimits.projectEditInfo) && userLimits.projectEditInfo.map((p) => (
                   <li key={p.id || p.title}>
                     {p.title}: {typeof p.editsRemaining === 'number' ? p.editsRemaining : 3} edits left
                   </li>
