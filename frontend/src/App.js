@@ -184,7 +184,6 @@ function App() {
   );
 
   // Project gallery
-  /*
   const [projects, setProjects] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [voting, setVoting] = React.useState({});
@@ -240,8 +239,6 @@ function App() {
     image: null,
     social: '',
   });
-  const gallerySection = null;
-  */
   const gallerySection = (
     <section id="gallery" className="w-full flex flex-col items-center p-8 max-w-7xl mx-auto">
       <h1 className="font-heading text-4xl mb-8 text-legitGold animate-fadein">Project Gallery</h1>
