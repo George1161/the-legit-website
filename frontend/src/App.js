@@ -184,6 +184,7 @@ function App() {
   );
 
   // Project gallery
+  /*
   const [projects, setProjects] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [voting, setVoting] = React.useState({});
@@ -229,55 +230,6 @@ function App() {
     setVoting((v) => ({ ...v, [id]: false }));
   };
   const hasVoted = (id) => voted.includes(id);
-
-  const handleEdit = (project) => {
-    setEditingProject(project);
-    setEditForm({
-      title: project.title,
-      shortDescription: project.shortDescription,
-      fullDescription: project.fullDescription,
-      image: null,
-      social: project.social || '',
-    });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value, files } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const formData = new FormData();
-      formData.append('title', editForm.title);
-      formData.append('shortDescription', editForm.shortDescription);
-      formData.append('fullDescription', editForm.fullDescription);
-      formData.append('social', editForm.social);
-      if (editForm.image) {
-        formData.append('image', editForm.image);
-      }
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/${editingProject.id}`, {
-        method: 'PUT',
-        body: formData,
-      });
-      if (res.ok) {
-        alert('Project updated! It will need admin approval again.');
-        setEditingProject(null);
-        setEditForm({ title: '', shortDescription: '', fullDescription: '', image: null, social: '' });
-        fetchProjects();
-        fetchUserLimits();
-      } else {
-        const errorData = await res.json();
-        alert(errorData.message || 'Update failed.');
-      }
-    } catch (err) {
-      alert('Update failed.');
-    }
-  };
   const featured = React.useMemo(() => projects.find((p) => p.nominated), [projects]);
   const [modalProject, setModalProject] = React.useState(null);
   const [editingProject, setEditingProject] = React.useState(null);
@@ -288,11 +240,12 @@ function App() {
     image: null,
     social: '',
   });
-
+  const gallerySection = null;
+  */
   const gallerySection = (
     <section id="gallery" className="w-full flex flex-col items-center p-8 max-w-7xl mx-auto">
       <h1 className="font-heading text-4xl mb-8 text-legitGold animate-fadein">Project Gallery</h1>
-      {featured && (
+      {/* featured && (
         <div className="mb-12 w-full flex flex-col items-center">
           <div className="w-full max-w-2xl">
           <h2 className="font-heading text-2xl text-glitch mb-2 animate-fadein">Featured Legit Pick</h2>
@@ -308,8 +261,8 @@ function App() {
           />
           </div>
         </div>
-      )}
-      {loading ? (
+      ) */}
+      {/* loading ? (
         <p className="font-body text-secondary animate-fadein">Loading...</p>
       ) : projects.length === 0 ? (
         <p className="font-body text-secondary animate-fadein">No projects submitted yet.</p>
@@ -330,9 +283,9 @@ function App() {
             />
           ))}
         </div>
-      )}
+      ) */}
       {/* Modal for full project info */}
-      {modalProject && (
+      {/* modalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setModalProject(null)}>
           <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
             <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setModalProject(null)}>&times;</button>
@@ -350,9 +303,9 @@ function App() {
             </div>
           </div>
         </div>
-      )}
+      ) */}
       {/* Edit Modal */}
-      {editingProject && (
+      {/* editingProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setEditingProject(null)}>
           <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
             <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setEditingProject(null)}>&times;</button>
@@ -383,7 +336,7 @@ function App() {
             </form>
           </div>
         </div>
-      )}
+      ) */}
     </section>
   );
 
@@ -546,11 +499,19 @@ function App() {
             <div className="mt-2 text-sm text-secondary">
               <strong>Your Projects & Edits:</strong>
               <ul className="mt-1">
-                {Array.isArray(userLimits.projectEditInfo) && userLimits.projectEditInfo.map((p) => (
-                  <li key={p.id || p.title}>
-                    {p.title}: {typeof p.editsRemaining === 'number' ? p.editsRemaining : 3} edits left
-                  </li>
-                ))}
+                {/* Debug log for projectEditInfo */}
+                {console.log('Rendering projectEditInfo:', userLimits.projectEditInfo)}
+                {Array.isArray(userLimits.projectEditInfo) && userLimits.projectEditInfo.map((p, idx) => {
+                  if (!p || typeof p !== 'object') {
+                    console.warn('Skipping invalid projectEditInfo entry at index', idx, p);
+                    return null;
+                  }
+                  return (
+                    <li key={p.id || p.title || idx}>
+                      {p.title ? p.title : 'Untitled'}: {typeof p.editsRemaining === 'number' ? p.editsRemaining : 3} edits left
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : (
@@ -591,9 +552,15 @@ function App() {
       </section>
       <footer className="w-full text-center py-8 text-secondary text-sm opacity-80 font-body mt-8 border-t border-secondary flex flex-col items-center gap-4">
         <div className="flex gap-4 justify-center mb-2">
-          {socials.map((s) => (
-            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="hover:scale-110 transition">{s.icon}</a>
-          ))}
+          {Array.isArray(socials) && socials.map((s, idx) => {
+            if (!s || typeof s !== 'object') {
+              console.warn('Skipping invalid social at index', idx, s);
+              return null;
+            }
+            return (
+              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="hover:scale-110 transition">{s.icon}</a>
+            );
+          })}
         </div>
         <div>&copy; {new Date().getFullYear()} The Legit. All rights reserved.</div>
         {showTop && (
@@ -725,29 +692,35 @@ function Admin() {
         <p className="font-body text-secondary">No projects found.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-          {projects.map((project) => (
-            <div key={project.id} className="relative">
-              <ProjectCard
-                project={project}
-                voting={{}} // not used in admin
-                hasVoted={() => false} // not used in admin
-                onVote={() => {}} // not used in admin
-                onNominate={handleNominate}
-                showNominateButton={true}
-                isAdmin={true}
-                onDelete={handleDelete}
-                onClick={() => setModalProject(project)}
-              />
-              {!project.approved && (
-                <button
-                  className="absolute top-4 left-4 px-4 py-2 rounded bg-legitGold text-background font-heading shadow hover:bg-glitch transition"
-                  onClick={() => handleApprove(project.id)}
-                >
-                  Approve
-                </button>
-              )}
-            </div>
-          ))}
+          {Array.isArray(projects) && projects.map((project, idx) => {
+            if (!project || typeof project !== 'object') {
+              console.warn('Skipping invalid project at index', idx, project);
+              return null;
+            }
+            return (
+              <div key={project.id} className="relative">
+                <ProjectCard
+                  project={project}
+                  voting={{}} // not used in admin
+                  hasVoted={() => false} // not used in admin
+                  onVote={() => {}} // not used in admin
+                  onNominate={handleNominate}
+                  showNominateButton={true}
+                  isAdmin={true}
+                  onDelete={handleDelete}
+                  onClick={() => setModalProject(project)}
+                />
+                {!project.approved && (
+                  <button
+                    className="absolute top-4 left-4 px-4 py-2 rounded bg-legitGold text-background font-heading shadow hover:bg-glitch transition"
+                    onClick={() => handleApprove(project.id)}
+                  >
+                    Approve
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
       {/* Modal for full project info in admin */}
