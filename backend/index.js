@@ -8,7 +8,14 @@ import fs from 'fs/promises';
 import fsSync from 'fs';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import cloudinary from 'cloudinary';
 dotenv.config();
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -107,9 +114,16 @@ app.post('/projects', upload.any(), async (req, res) => {
     if (count >= 3) {
       return res.status(403).json({ success: false, message: 'You have reached the submission limit for this IP.' });
     }
-    let imageFile = null;
+    let imageUrl = null;
     if (req.files && req.files.length > 0) {
-      imageFile = req.files.find(f => f.fieldname === 'image');
+      const imageFile = req.files.find(f => f.fieldname === 'image');
+      if (imageFile) {
+        // Upload to Cloudinary
+        const uploadResult = await cloudinary.v2.uploader.upload(imageFile.path, {
+          folder: 'the-legit-projects',
+        });
+        imageUrl = uploadResult.secure_url;
+      }
     }
     let { title, shortDescription, fullDescription, social, description } = req.body;
     if (!title || !shortDescription || !fullDescription) {
@@ -131,7 +145,7 @@ app.post('/projects', upload.any(), async (req, res) => {
       shortDescription: shortDesc,
       fullDescription: fullDesc,
       social,
-      image: imageFile ? `/uploads/${imageFile.filename}` : null,
+      image: imageUrl,
       createdByIP: ip,
       approved: false,
       editCount: 0,
