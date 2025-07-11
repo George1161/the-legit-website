@@ -32,16 +32,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Multer setup for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Multer setup for image uploads (memory storage for Cloudinary)
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Serve uploads as static files
@@ -118,11 +110,13 @@ app.post('/projects', upload.any(), async (req, res) => {
     if (req.files && req.files.length > 0) {
       const imageFile = req.files.find(f => f.fieldname === 'image');
       if (imageFile) {
-        // Upload to Cloudinary
-        const uploadResult = await cloudinary.v2.uploader.upload(imageFile.path, {
-          folder: 'the-legit-projects',
+        imageUrl = await new Promise((resolve, reject) => {
+          const stream = cloudinary.v2.uploader.upload_stream({ folder: 'the-legit-projects' }, (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          });
+          stream.end(imageFile.buffer);
         });
-        imageUrl = uploadResult.secure_url;
       }
     }
     let { title, shortDescription, fullDescription, social, description } = req.body;
@@ -172,9 +166,18 @@ app.put('/projects/:id', upload.any(), async (req, res) => {
   if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
   if (project.createdByIP !== ip) return res.status(403).json({ success: false, message: 'You can only edit your own project.' });
   if (project.editCount >= 3) return res.status(403).json({ success: false, message: 'Edit limit reached for this project.' });
-  let imageFile = null;
+  let imageUrl = project.image;
   if (req.files && req.files.length > 0) {
-    imageFile = req.files.find(f => f.fieldname === 'image');
+    const imageFile = req.files.find(f => f.fieldname === 'image');
+    if (imageFile) {
+      imageUrl = await new Promise((resolve, reject) => {
+        const stream = cloudinary.v2.uploader.upload_stream({ folder: 'the-legit-projects' }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result.secure_url);
+        });
+        stream.end(imageFile.buffer);
+      });
+    }
   }
   let { title, shortDescription, fullDescription, social, description } = req.body;
   if (!title || !shortDescription || !fullDescription) {
@@ -195,7 +198,7 @@ app.put('/projects/:id', upload.any(), async (req, res) => {
   project.shortDescription = shortDesc;
   project.fullDescription = fullDesc;
   project.social = social;
-  if (imageFile) project.image = `/uploads/${imageFile.filename}`;
+  project.image = imageUrl;
   project.editCount += 1;
   project.approved = false; // Needs admin re-approval
   await project.save();
@@ -269,6 +272,33 @@ app.post('/admin/projects/:id/reject', async (req, res) => {
   const project = await Project.findByIdAndDelete(req.params.id);
   if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
   res.json({ success: true });
+});
+
+// Get user limits (submissions and edits remaining)
+app.get('/user-limits', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const submissionCount = await Project.countDocuments({ createdByIP: ip });
+    const submissionsRemaining = Math.max(0, 3 - submissionCount);
+    
+    // Get projects created by this IP with their edit counts
+    const userProjects = await Project.find({ createdByIP: ip });
+    const projectEditInfo = userProjects.map(project => ({
+      id: project._id.toString(),
+      title: project.title,
+      editCount: project.editCount,
+      editsRemaining: Math.max(0, 3 - project.editCount)
+    }));
+    
+    res.json({
+      submissionsRemaining,
+      totalSubmissions: submissionCount,
+      projectEditInfo
+    });
+  } catch (err) {
+    console.error('Error getting user limits:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
 app.listen(PORT, () => {
