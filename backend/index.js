@@ -83,10 +83,19 @@ app.get('/', (req, res) => {
   res.send({ status: 'ok', message: 'The Legit backend is running.' });
 });
 
+// Helper to map _id to id for frontend
+function projectToClient(project) {
+  const obj = project.toObject ? project.toObject() : project;
+  obj.id = obj._id.toString();
+  delete obj._id;
+  delete obj.__v;
+  return obj;
+}
+
 // Public: Get all approved projects
 app.get('/projects', async (req, res) => {
   const projects = await Project.find({ approved: true }).sort({ createdAt: -1 });
-  res.json(projects);
+  res.json(projects.map(projectToClient));
 });
 
 // Submit a new project (max 3 per IP, not approved by default)
@@ -127,7 +136,7 @@ app.post('/projects', upload.any(), async (req, res) => {
       editCount: 0,
     });
     await project.save();
-    res.json({ success: true, project });
+    res.json({ success: true, project: projectToClient(project) });
   } catch (err) {
     console.error('Error in /projects POST:', err);
     res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
@@ -139,7 +148,7 @@ app.delete('/projects/:id', async (req, res) => {
   if (!project) {
     return res.status(404).json({ success: false, message: 'Project not found.' });
   }
-  res.json({ success: true });
+  res.json({ success: true, project: projectToClient(project) });
 });
 
 app.put('/projects/:id', upload.any(), async (req, res) => {
@@ -175,7 +184,7 @@ app.put('/projects/:id', upload.any(), async (req, res) => {
   project.editCount += 1;
   project.approved = false; // Needs admin re-approval
   await project.save();
-  res.json({ success: true, project });
+  res.json({ success: true, project: projectToClient(project) });
 });
 
 app.post('/vote', async (req, res) => {
@@ -195,7 +204,7 @@ app.post('/vote', async (req, res) => {
   await Vote.create({ projectId: id, ip });
   project.votes += 1;
   await project.save();
-  res.json({ success: true, project });
+  res.json({ success: true, project: projectToClient(project) });
 });
 
 app.post('/nominate', async (req, res) => {
@@ -206,7 +215,7 @@ app.post('/nominate', async (req, res) => {
   }
   project.nominated = !project.nominated;
   await project.save();
-  res.json({ success: true, project });
+  res.json({ success: true, project: projectToClient(project) });
 });
 
 app.post('/clear-votes', async (req, res) => {
@@ -218,7 +227,7 @@ app.post('/clear-votes', async (req, res) => {
   project.votes = 0;
   await project.save();
   await Vote.deleteMany({ projectId: id });
-  res.json({ success: true, project });
+  res.json({ success: true, project: projectToClient(project) });
 });
 
 // Admin: List all unapproved projects
@@ -231,8 +240,9 @@ app.get('/admin/projects', async (req, res) => {
 // Admin: Get all projects (approved and unapproved)
 app.get('/admin/projects', async (req, res) => {
   const projects = await Project.find().sort({ createdAt: -1 });
-  res.json(projects);
+  res.json(projects.map(projectToClient));
 });
+// FORCE REDEPLOY: This comment is here to ensure Render picks up the latest code.
 
 // Admin: Approve a project
 app.patch('/projects/:id/approve', async (req, res) => {
@@ -242,7 +252,7 @@ app.patch('/projects/:id/approve', async (req, res) => {
   }
   project.approved = true;
   await project.save();
-  res.json({ success: true, project });
+  res.json({ success: true, project: projectToClient(project) });
 });
 
 // Admin: Reject (delete) a project
