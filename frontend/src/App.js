@@ -440,6 +440,7 @@ function Admin() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
+  const [modalProject, setModalProject] = React.useState(null);
 
   // Fetch all projects (approved and unapproved)
   const fetchAdminProjects = React.useCallback(() => {
@@ -557,6 +558,7 @@ function Admin() {
                 showNominateButton={true}
                 isAdmin={true}
                 onDelete={handleDelete}
+                onClick={() => setModalProject(project)}
               />
               {!project.approved && (
                 <button
@@ -568,6 +570,27 @@ function Admin() {
               )}
             </div>
           ))}
+        </div>
+      )}
+      {/* Modal for full project info in admin */}
+      {modalProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setModalProject(null)}>
+          <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
+            <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setModalProject(null)}>&times;</button>
+            {modalProject.image && (
+              <img src={modalProject.image} alt={modalProject.title} className="w-full h-80 object-cover rounded-xl mb-6 shadow-lg" />
+            )}
+            <h2 className="font-heading text-3xl text-legitGold mb-2 text-center">{modalProject.title}</h2>
+            <p className="font-body text-secondary text-center mb-4 text-lg">{modalProject.fullDescription}</p>
+            {modalProject.social && (
+              <a href={modalProject.social} target="_blank" rel="noopener noreferrer" className="block text-glitch text-center mb-2 underline break-all">{modalProject.social}</a>
+            )}
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <span className="font-body text-legitGold text-lg">Votes: {modalProject.votes || 0}</span>
+              {modalProject.nominated && <span className="bg-legitGold text-background font-heading px-3 py-1 rounded-full text-xs shadow">Legit Pick</span>}
+              {!modalProject.approved && <span className="bg-red-600 text-white font-heading px-3 py-1 rounded-full text-xs shadow">Pending Approval</span>}
+            </div>
+          </div>
         </div>
       )}
     </div>
