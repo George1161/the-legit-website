@@ -21,7 +21,7 @@ function useFadeInOnScroll() {
 }
 
 // ProjectCard component for gallery
-function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete }) {
+function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete, onEdit, userLimits }) {
   const cardRef = useFadeInOnScroll();
   return (
     <div
@@ -67,6 +67,21 @@ function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNomina
         >
           Delete Project
         </button>
+      )}
+      {onEdit && userLimits && (
+        <div className="mt-4 flex flex-col gap-2">
+          <div className="text-center text-sm text-secondary">
+            Edits: {project.editCount || 0}/3
+          </div>
+          {project.editCount < 3 && (
+            <button
+              className="px-4 py-2 rounded bg-legitGold text-background font-bold shadow hover:bg-glitch transition"
+              onClick={e => { e.stopPropagation(); onEdit(project); }}
+            >
+              Edit Project
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -214,8 +229,65 @@ function App() {
     setVoting((v) => ({ ...v, [id]: false }));
   };
   const hasVoted = (id) => voted.includes(id);
+
+  const handleEdit = (project) => {
+    setEditingProject(project);
+    setEditForm({
+      title: project.title,
+      shortDescription: project.shortDescription,
+      fullDescription: project.fullDescription,
+      image: null,
+      social: project.social || '',
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, files } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append('title', editForm.title);
+      formData.append('shortDescription', editForm.shortDescription);
+      formData.append('fullDescription', editForm.fullDescription);
+      formData.append('social', editForm.social);
+      if (editForm.image) {
+        formData.append('image', editForm.image);
+      }
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/${editingProject.id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      if (res.ok) {
+        alert('Project updated! It will need admin approval again.');
+        setEditingProject(null);
+        setEditForm({ title: '', shortDescription: '', fullDescription: '', image: null, social: '' });
+        fetchProjects();
+        fetchUserLimits();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || 'Update failed.');
+      }
+    } catch (err) {
+      alert('Update failed.');
+    }
+  };
   const featured = React.useMemo(() => projects.find((p) => p.nominated), [projects]);
   const [modalProject, setModalProject] = React.useState(null);
+  const [editingProject, setEditingProject] = React.useState(null);
+  const [editForm, setEditForm] = React.useState({
+    title: '',
+    shortDescription: '',
+    fullDescription: '',
+    image: null,
+    social: '',
+  });
 
   const gallerySection = (
     <section id="gallery" className="w-full flex flex-col items-center p-8 max-w-7xl mx-auto">
@@ -231,6 +303,8 @@ function App() {
             onVote={handleVote}
             showNominateButton={false}
             onClick={() => setModalProject(featured)}
+            onEdit={handleEdit}
+            userLimits={userLimits}
           />
           </div>
         </div>
@@ -250,6 +324,8 @@ function App() {
               onVote={handleVote}
               showNominateButton={false}
               onClick={() => setModalProject(project)}
+              onEdit={handleEdit}
+              userLimits={userLimits}
               className="w-full max-w-2xl mx-auto"
             />
           ))}
@@ -275,8 +351,65 @@ function App() {
           </div>
         </div>
       )}
+      {/* Edit Modal */}
+      {editingProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setEditingProject(null)}>
+          <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
+            <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setEditingProject(null)}>&times;</button>
+            <h2 className="font-heading text-3xl text-legitGold mb-6 text-center">Edit Project</h2>
+            <div className="text-center text-sm text-secondary mb-4">
+              Edits remaining: {3 - (editingProject.editCount || 0)}/3
+            </div>
+            <form onSubmit={handleEditSubmit} className="flex flex-col gap-4">
+              <label className="font-body text-secondary">Project Title
+                <input name="title" type="text" value={editForm.title} onChange={handleEditChange} required className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+              </label>
+              <label className="font-body text-secondary">Short Description (max 50 chars)
+                <input name="shortDescription" type="text" value={editForm.shortDescription} onChange={handleEditChange} required maxLength={50} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+              </label>
+              <label className="font-body text-secondary">Full Description
+                <textarea name="fullDescription" value={editForm.fullDescription} onChange={handleEditChange} required rows={4} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+              </label>
+              <label className="font-body text-secondary">Image (leave empty to keep current)
+                <input name="image" type="file" accept="image/*" onChange={handleEditChange} className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+              </label>
+              <label className="font-body text-secondary">Social Link (Instagram, etc)
+                <input name="social" type="url" value={editForm.social} onChange={handleEditChange} placeholder="https://instagram.com/yourproject" className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
+              </label>
+              <div className="flex gap-4 mt-4">
+                <button type="button" onClick={() => setEditingProject(null)} className="flex-1 px-4 py-2 rounded bg-gray-600 text-white font-bold shadow hover:bg-gray-700 transition">Cancel</button>
+                <button type="submit" className="flex-1 px-4 py-2 rounded bg-legitGold text-background font-bold shadow hover:bg-glitch transition">Update Project</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
+
+  // User limits state
+  const [userLimits, setUserLimits] = React.useState({
+    submissionsRemaining: 3,
+    totalSubmissions: 0,
+    projectEditInfo: []
+  });
+
+  // Fetch user limits
+  const fetchUserLimits = React.useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/user-limits`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserLimits(data);
+      }
+    } catch (err) {
+      console.error('Error fetching user limits:', err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchUserLimits();
+  }, [fetchUserLimits]);
 
   // Project submission form (moved to bottom)
   const [form, setForm] = React.useState({
@@ -312,8 +445,10 @@ function App() {
         alert('Project submitted!');
         setForm({ title: '', shortDescription: '', fullDescription: '', image: null, social: '' });
         fetchProjects();
+        fetchUserLimits(); // Refresh user limits after submission
       } else {
-        alert('Submission failed.');
+        const errorData = await res.json();
+        alert(errorData.message || 'Submission failed.');
       }
     } catch (err) {
       alert('Submission failed.');
@@ -392,6 +527,14 @@ function App() {
       {divider}
       <section id="submit" ref={submitRef} className="w-full flex flex-col items-center justify-center p-8 max-w-2xl mx-auto">
         <h1 className="font-heading text-4xl mb-4 text-legitGold animate-fadein">Submit Your Project</h1>
+        <div className="bg-[#181818] p-6 rounded-lg shadow-lg mb-4 text-center animate-fadein">
+          <p className="font-body text-legitGold text-lg mb-2">
+            Submissions Remaining: <span className="font-bold">{userLimits.submissionsRemaining}</span> / 3
+          </p>
+          {userLimits.submissionsRemaining === 0 && (
+            <p className="font-body text-red-400 text-sm">You have reached your submission limit for this IP address.</p>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="bg-[#181818] p-8 rounded-lg shadow-lg flex flex-col gap-4 w-full max-w-md animate-fadein">
           <label className="font-body text-secondary">Project Title
             <input name="title" type="text" value={form.title} onChange={handleChange} required className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
@@ -408,7 +551,17 @@ function App() {
           <label className="font-body text-secondary">Social Link (Instagram, etc)
             <input name="social" type="url" value={form.social} onChange={handleChange} placeholder="https://instagram.com/yourproject" className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
           </label>
-          <button type="submit" className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow hover:bg-glitch transition mt-4 focus:outline-none focus:ring-2 focus:ring-legitGold">Submit</button>
+          <button 
+            type="submit" 
+            disabled={userLimits.submissionsRemaining === 0}
+            className={`font-bold px-6 py-3 rounded-lg shadow transition mt-4 focus:outline-none focus:ring-2 focus:ring-legitGold ${
+              userLimits.submissionsRemaining === 0 
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                : 'bg-vote text-background hover:bg-glitch'
+            }`}
+          >
+            {userLimits.submissionsRemaining === 0 ? 'Submission Limit Reached' : 'Submit'}
+          </button>
         </form>
       </section>
       <footer className="w-full text-center py-8 text-secondary text-sm opacity-80 font-body mt-8 border-t border-secondary flex flex-col items-center gap-4">
