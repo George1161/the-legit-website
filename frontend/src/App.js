@@ -88,9 +88,9 @@ function NavBar() {
     <nav className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur border-b border-secondary flex items-center justify-between py-3 px-8 text-legitGold font-heading text-lg shadow-lg">
       <div className="text-3xl font-heading text-legitGold tracking-wide select-none cursor-pointer" onClick={() => scrollTo('home')}>The Legit</div>
       <div className="flex gap-8">
-        <button onClick={() => scrollTo('about')} className="hover:text-glitch transition">About</button>
-        <button onClick={() => scrollTo('gallery')} className="hover:text-glitch transition">Gallery</button>
-        <button onClick={() => scrollTo('submit')} className="hover:text-glitch transition">Submit</button>
+      <button onClick={() => scrollTo('about')} className="hover:text-glitch transition">About</button>
+      <button onClick={() => scrollTo('gallery')} className="hover:text-glitch transition">Gallery</button>
+      <button onClick={() => scrollTo('submit')} className="hover:text-glitch transition">Submit</button>
       </div>
     </nav>
   );
@@ -441,16 +441,22 @@ function Admin() {
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
 
-  React.useEffect(() => {
-    if (!loggedIn) return;
-    fetch(`${process.env.REACT_APP_API_URL}/projects`)
+  // Fetch all projects (approved and unapproved)
+  const fetchAdminProjects = React.useCallback(() => {
+    setLoading(true);
+    fetch(`${process.env.REACT_APP_API_URL}/admin/projects`)
       .then((res) => res.json())
       .then((data) => {
         setProjects(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [loggedIn]);
+  }, []);
+
+  React.useEffect(() => {
+    if (!loggedIn) return;
+    fetchAdminProjects();
+  }, [loggedIn, fetchAdminProjects]);
 
   const handleNominate = async (id) => {
     const res = await fetch(`${process.env.REACT_APP_API_URL}/nominate`, {
@@ -480,10 +486,17 @@ function Admin() {
       body: JSON.stringify({ id }),
     });
     if (res.ok) {
-      // Refetch all projects to ensure UI is in sync
-      const projectsRes = await fetch(`${process.env.REACT_APP_API_URL}/projects`);
-      const projectsData = await projectsRes.json();
-      setProjects(projectsData);
+      fetchAdminProjects();
+    }
+  };
+
+  // Approve project
+  const handleApprove = async (id) => {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/${id}/approve`, {
+      method: 'PATCH',
+    });
+    if (res.ok) {
+      fetchAdminProjects();
     }
   };
 
@@ -497,7 +510,7 @@ function Admin() {
     }
   };
 
-  if (!loggedIn) {
+  if (!loggedIn)
     return (
       <div className="min-h-screen bg-legit-bg text-text flex flex-col items-center justify-center p-8">
         <h1 className="font-heading text-4xl mb-8 text-legitGold">Admin Login</h1>
@@ -523,7 +536,6 @@ function Admin() {
         </form>
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-legit-bg text-text flex flex-col items-center p-8">
@@ -535,17 +547,26 @@ function Admin() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
           {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              voting={{}} // not used in admin
-              hasVoted={() => false} // not used in admin
-              onVote={() => {}} // not used in admin
-              onNominate={handleNominate}
-              showNominateButton={true}
-              isAdmin={true}
-              onDelete={handleDelete}
-            />
+            <div key={project.id} className="relative">
+              <ProjectCard
+                project={project}
+                voting={{}} // not used in admin
+                hasVoted={() => false} // not used in admin
+                onVote={() => {}} // not used in admin
+                onNominate={handleNominate}
+                showNominateButton={true}
+                isAdmin={true}
+                onDelete={handleDelete}
+              />
+              {!project.approved && (
+                <button
+                  className="absolute top-4 left-4 px-4 py-2 rounded bg-legitGold text-background font-heading shadow hover:bg-glitch transition"
+                  onClick={() => handleApprove(project.id)}
+                >
+                  Approve
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}

@@ -228,11 +228,18 @@ app.get('/admin/projects', async (req, res) => {
   res.json(projects);
 });
 
+// Admin: Get all projects (approved and unapproved)
+app.get('/admin/projects', async (req, res) => {
+  const projects = await Project.find().sort({ createdAt: -1 });
+  res.json(projects);
+});
+
 // Admin: Approve a project
-app.post('/admin/projects/:id/approve', async (req, res) => {
-  // TODO: Add admin authentication
+app.patch('/projects/:id/approve', async (req, res) => {
   const project = await Project.findById(req.params.id);
-  if (!project) return res.status(404).json({ success: false, message: 'Project not found.' });
+  if (!project) {
+    return res.status(404).json({ success: false, message: 'Project not found.' });
+  }
   project.approved = true;
   await project.save();
   res.json({ success: true, project });
