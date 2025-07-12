@@ -22,7 +22,7 @@ function useFadeInOnScroll() {
 }
 
 // ProjectCard component for gallery
-function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete, onEdit, userLimits }) {
+function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete, onEdit }) {
   const cardRef = useFadeInOnScroll();
   return (
     <div
@@ -69,7 +69,7 @@ function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNomina
           Delete Project
         </button>
       )}
-      {onEdit && userLimits && (
+      {onEdit && (
         <div className="mt-4 flex flex-col gap-2">
           <div className="text-center text-sm text-secondary">
             Edits: {project.editCount || 0}/3
@@ -268,19 +268,25 @@ function App() {
         <p className="font-body text-secondary animate-fadein">No projects submitted yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 w-full max-w-7xl">
-          {Array.isArray(projects) && projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              voting={voting}
-              hasVoted={hasVoted}
-              onVote={handleVote}
-              showNominateButton={false}
-              onClick={() => setModalProject(project)}
-              userLimits={userLimits}
-              className="w-full max-w-2xl mx-auto"
-            />
-          ))}
+          {Array.isArray(projects) && projects.map((project, idx) => {
+            // Defensive check for valid project object
+            if (!project || typeof project !== 'object' || !project.id) {
+              console.warn('Skipping invalid project at index', idx, project);
+              return null;
+            }
+            return (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                voting={voting}
+                hasVoted={hasVoted}
+                onVote={handleVote}
+                showNominateButton={false}
+                onClick={() => setModalProject(project)}
+                className="w-full max-w-2xl mx-auto"
+              />
+            );
+          })}
         </div>
       )}
       {/* Modal for full project info */}
@@ -692,7 +698,7 @@ function Admin() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
           {Array.isArray(projects) && projects.map((project, idx) => {
-            if (!project || typeof project !== 'object') {
+            if (!project || typeof project !== 'object' || !project.id) {
               console.warn('Skipping invalid project at index', idx, project);
               return null;
             }
