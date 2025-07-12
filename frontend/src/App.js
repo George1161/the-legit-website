@@ -23,35 +23,39 @@ function useFadeInOnScroll() {
 
 // ProjectCard component for gallery
 function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete, onEdit }) {
+  const cardRef = useFadeInOnScroll();
   return (
     <div
+      ref={cardRef}
       onClick={onClick}
-      className={`cursor-pointer bg-[#181818] rounded-2xl shadow-lg p-8 flex flex-col items-center relative transition-all duration-200 hover:scale-102 ${project.nominated ? 'border-2 border-legitGold' : ''} ${className || ''}`}
+      className={`cursor-pointer bg-[#181818] rounded-2xl shadow-2xl p-12 flex flex-col items-center relative transition-transform duration-200 hover:scale-105 hover:shadow-3xl ${project.nominated ? 'border-4 border-glow-gold' : ''} ${className || ''}`}
+      style={project.nominated ? { boxShadow: '0 0 32px 8px #FFD70099' } : {}}
     >
       {project.nominated && (
-        <span className="absolute top-4 right-4 bg-legitGold text-background font-heading px-3 py-1 rounded-full text-sm shadow">Legit Pick</span>
+        <span className="absolute top-6 right-6 bg-legitGold text-background font-heading px-4 py-2 rounded-full text-base shadow animate-pulse-badge">Legit Pick</span>
       )}
       {project.image ? (
-        <img src={project.image} alt={project.title} className="w-40 h-40 object-cover rounded-lg mb-4 shadow" />
+        <img src={project.image} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
       ) : (
-        <div className="w-40 h-40 bg-secondary rounded-lg mb-4 flex items-center justify-center text-background font-accent text-2xl">IMG</div>
+        <div className="w-48 h-48 bg-secondary rounded-xl mb-6 flex items-center justify-center text-background font-accent text-4xl">IMG</div>
       )}
-      <h2 className="font-heading text-2xl text-legitGold mb-2 text-center">{project.title}</h2>
-      <p className="font-body text-secondary text-center mb-4 text-base">{project.shortDescription}</p>
+      <h2 className="font-heading text-3xl text-legitGold mb-3 text-center">{project.title}</h2>
+      <p className="font-body text-secondary text-center mb-6 text-lg">{project.shortDescription}</p>
       <div className="flex items-center gap-2 mb-2">
         <button
-          className="bg-vote text-background font-bold px-4 py-2 rounded shadow hover:bg-glitch transition disabled:opacity-50 focus:outline-none"
+          className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow hover:bg-glitch transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-legitGold"
           onClick={e => { e.stopPropagation(); onVote(project.id); }}
           disabled={voting[project.id] || hasVoted(project.id)}
           title={hasVoted(project.id) ? 'You have already voted for this project.' : ''}
+          style={{ boxShadow: hasVoted(project.id) ? '0 0 8px 2px #FFD700' : undefined }}
         >
           {voting[project.id] ? 'Voting...' : hasVoted(project.id) ? 'Voted' : 'Vote'}
         </button>
-        <span className="font-body text-legitGold text-lg">{project.votes || 0}</span>
+        <span className="font-body text-legitGold text-xl">{project.votes || 0}</span>
       </div>
       {showNominateButton && (
         <button
-          className={`mt-2 px-3 py-1 rounded font-heading text-sm shadow transition ${project.nominated ? 'bg-legitGold text-background' : 'bg-secondary text-legitGold'} hover:bg-glitch`}
+          className={`mt-2 px-4 py-2 rounded font-heading text-base shadow transition hover:scale-105 ${project.nominated ? 'bg-legitGold text-background' : 'bg-secondary text-legitGold'} hover:bg-glitch`}
           onClick={e => { e.stopPropagation(); onNominate(project.id); }}
         >
           {project.nominated ? 'Remove Legit Pick' : 'Nominate as Legit Pick'}
@@ -256,8 +260,7 @@ function App() {
           </div>
         </div>
       ) */}
-      {/* Debug: Log projects array */}
-      {console.log('Projects in state:', projects)}
+
       {loading ? (
         <p className="font-body text-secondary animate-fadein">Loading...</p>
       ) : projects.length === 0 ? (
@@ -428,53 +431,13 @@ function App() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Side SVGs and accent text
+  // Simplified side decorations for better performance
   const sideDecor = (
     <>
-      {/* Left graffiti SVG - enhanced */}
-      <svg className="fixed left-0 top-0 h-full w-44 opacity-15 pointer-events-none z-0 hidden md:block" viewBox="0 0 90 900" fill="none">
-        <path d="M45 0 Q15 250 75 450 Q15 700 45 900" stroke="#FFD700" strokeWidth="7" strokeLinecap="round"/>
-        <circle cx="25" cy="120" r="14" fill="#FFD700" opacity="0.4"/>
-        <rect x="12" y="700" width="24" height="70" rx="12" fill="#FFD700" opacity="0.25"/>
-        {/* Urban tag */}
-        <text x="10" y="300" fontSize="22" fontFamily="monospace" fill="#FFD700" opacity="0.13" transform="rotate(-12 10 300)">LEGIT</text>
-        {/* Subtle star */}
-        <polygon points="45,60 48,70 59,70 50,76 53,86 45,80 37,86 40,76 31,70 42,70" fill="#FFD700" opacity="0.09"/>
-      </svg>
-      {/* Right mythical SVG - enhanced */}
-      <svg className="fixed right-0 top-0 h-full w-44 opacity-15 pointer-events-none z-0 hidden md:block" viewBox="0 0 90 900" fill="none">
-        <path d="M45 0 Q75 250 15 450 Q75 700 45 900" stroke="#00BFFF" strokeWidth="7" strokeLinecap="round"/>
-        <ellipse cx="70" cy="250" rx="12" ry="22" fill="#00BFFF" opacity="0.35"/>
-        <rect x="60" y="800" width="24" height="50" rx="12" fill="#00BFFF" opacity="0.18"/>
-        {/* Mythical glyph */}
-        <text x="60" y="400" fontSize="20" fontFamily="serif" fill="#00BFFF" opacity="0.13" transform="rotate(8 60 400)">✶</text>
-        {/* Subtle star */}
-        <polygon points="45,120 48,130 59,130 50,136 53,146 45,140 37,146 40,136 31,130 42,130" fill="#00BFFF" opacity="0.08"/>
-      </svg>
-      {/* Faded glyphs and stars - left */}
-      <svg className="fixed left-10 top-1/4 w-10 h-32 opacity-10 pointer-events-none z-0 hidden xl:block" viewBox="0 0 40 128" fill="none">
-        <text x="10" y="30" fontSize="18" fontFamily="serif" fill="#FFD700" opacity="0.18">✦</text>
-        <text x="5" y="80" fontSize="16" fontFamily="serif" fill="#FFD700" opacity="0.13">☉</text>
-      </svg>
-      {/* Faded glyphs and stars - right */}
-      <svg className="fixed right-10 bottom-1/4 w-10 h-32 opacity-10 pointer-events-none z-0 hidden xl:block" viewBox="0 0 40 128" fill="none">
-        <text x="10" y="30" fontSize="18" fontFamily="serif" fill="#00BFFF" opacity="0.18">✦</text>
-        <text x="5" y="80" fontSize="16" fontFamily="serif" fill="#00BFFF" opacity="0.13">☾</text>
-      </svg>
-      {/* Vertical accent text left */}
-      <div className="fixed left-2 top-1/2 -translate-y-1/2 z-10 hidden xl:block" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.2em', fontWeight: 700, fontSize: '1.1rem', color: '#FFD700', opacity: 0.18 }}>
-        LEGIT SUPPORT
-      </div>
-      {/* Vertical accent text right */}
-      <div className="fixed right-2 top-1/2 -translate-y-1/2 z-10 hidden xl:block" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.2em', fontWeight: 700, fontSize: '1.1rem', color: '#00BFFF', opacity: 0.18 }}>
-        FOR THE REAL ONES
-      </div>
-      {/* Floating vertical social bar (XL+) */}
-      {/* Removed as per user request */}
-      {/* Noise overlay - main */}
-      <div className="fixed inset-0 pointer-events-none z-0" style={{ background: 'url("data:image/svg+xml,%3Csvg width=\'100%25\' height=\'100%25\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.07\'/%3E%3C/svg%3E")', zIndex: 1 }}></div>
-      {/* Noise overlay - fine grain */}
-      <div className="fixed inset-0 pointer-events-none z-0" style={{ background: 'url("data:image/svg+xml,%3Csvg width=\'100%25\' height=\'100%25\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n2\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'1.8\' numOctaves=\'6\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n2)\' opacity=\'0.04\'/%3E%3C/svg%3E")', zIndex: 2 }}></div>
+      {/* Simple left accent */}
+      <div className="fixed left-0 top-0 h-full w-2 bg-gradient-to-b from-legitGold/20 to-transparent pointer-events-none z-0 hidden md:block"></div>
+      {/* Simple right accent */}
+      <div className="fixed right-0 top-0 h-full w-2 bg-gradient-to-b from-blue-400/20 to-transparent pointer-events-none z-0 hidden md:block"></div>
     </>
   );
 
@@ -500,8 +463,7 @@ function App() {
             <div className="mt-2 text-sm text-secondary">
               <strong>Your Projects & Edits:</strong>
               <ul className="mt-1">
-                {/* Debug log for projectEditInfo */}
-                {console.log('Rendering projectEditInfo:', userLimits.projectEditInfo)}
+
                 {Array.isArray(userLimits.projectEditInfo) && userLimits.projectEditInfo.map((p, idx) => {
                   if (!p || typeof p !== 'object') {
                     console.warn('Skipping invalid projectEditInfo entry at index', idx, p);
@@ -553,15 +515,9 @@ function App() {
       </section>
       <footer className="w-full text-center py-8 text-secondary text-sm opacity-80 font-body mt-8 border-t border-secondary flex flex-col items-center gap-4">
         <div className="flex gap-4 justify-center mb-2">
-          {Array.isArray(socials) && socials.map((s, idx) => {
-            if (!s || typeof s !== 'object') {
-              console.warn('Skipping invalid social at index', idx, s);
-              return null;
-            }
-            return (
-              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="hover:scale-110 transition">{s.icon}</a>
-            );
-          })}
+                {Array.isArray(socials) && socials.map((s, idx) => (
+        <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="hover:scale-110 transition">{s.icon}</a>
+      ))}
         </div>
         <div>&copy; {new Date().getFullYear()} The Legit. All rights reserved.</div>
         {showTop && (
