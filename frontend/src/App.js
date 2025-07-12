@@ -2,60 +2,37 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Fade-in on scroll hook
-function useFadeInOnScroll() {
-  const ref = React.useRef();
-  React.useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const onScroll = () => {
-      const rect = node.getBoundingClientRect();
-      if (rect.top < window.innerHeight - 60) {
-        node.classList.add('animate-fadein');
-      }
-    };
-    window.addEventListener('scroll', onScroll);
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return ref;
-}
-
-// ProjectCard component for gallery
+// Simplified ProjectCard component without heavy scroll listeners
 function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete, onEdit }) {
-  const cardRef = useFadeInOnScroll();
   return (
     <div
-      ref={cardRef}
       onClick={onClick}
-      className={`cursor-pointer bg-[#181818] rounded-2xl shadow-2xl p-12 flex flex-col items-center relative transition-transform duration-200 hover:scale-105 hover:shadow-3xl ${project.nominated ? 'border-4 border-glow-gold' : ''} ${className || ''}`}
-      style={project.nominated ? { boxShadow: '0 0 32px 8px #FFD70099' } : {}}
+      className={`cursor-pointer bg-[#181818] rounded-2xl shadow-lg p-8 flex flex-col items-center relative transition-all duration-200 hover:scale-[1.02] ${project.nominated ? 'border-2 border-glow-gold' : ''} ${className || ''}`}
     >
       {project.nominated && (
-        <span className="absolute top-6 right-6 bg-legitGold text-background font-heading px-4 py-2 rounded-full text-base shadow animate-pulse-badge">Legit Pick</span>
+        <span className="absolute top-4 right-4 bg-legitGold text-background font-heading px-3 py-1 rounded-full text-sm">Legit Pick</span>
       )}
       {project.image ? (
-        <img src={project.image} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
+        <img src={project.image} alt={project.title} className="w-40 h-40 object-cover rounded-xl mb-4 shadow-md" />
       ) : (
-        <div className="w-48 h-48 bg-secondary rounded-xl mb-6 flex items-center justify-center text-background font-accent text-4xl">IMG</div>
+        <div className="w-40 h-40 bg-secondary rounded-xl mb-4 flex items-center justify-center text-background font-accent text-3xl">IMG</div>
       )}
-      <h2 className="font-heading text-3xl text-legitGold mb-3 text-center">{project.title}</h2>
-      <p className="font-body text-secondary text-center mb-6 text-lg">{project.shortDescription}</p>
+      <h2 className="font-heading text-2xl text-legitGold mb-2 text-center">{project.title}</h2>
+      <p className="font-body text-secondary text-center mb-4 text-base">{project.shortDescription}</p>
       <div className="flex items-center gap-2 mb-2">
         <button
-          className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow hover:bg-glitch transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-legitGold"
+          className="bg-vote text-background font-bold px-4 py-2 rounded-lg shadow hover:bg-glitch transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-legitGold"
           onClick={e => { e.stopPropagation(); onVote(project.id); }}
           disabled={voting[project.id] || hasVoted(project.id)}
           title={hasVoted(project.id) ? 'You have already voted for this project.' : ''}
-          style={{ boxShadow: hasVoted(project.id) ? '0 0 8px 2px #FFD700' : undefined }}
         >
           {voting[project.id] ? 'Voting...' : hasVoted(project.id) ? 'Voted' : 'Vote'}
         </button>
-        <span className="font-body text-legitGold text-xl">{project.votes || 0}</span>
+        <span className="font-body text-legitGold text-lg">{project.votes || 0}</span>
       </div>
       {showNominateButton && (
         <button
-          className={`mt-2 px-4 py-2 rounded font-heading text-base shadow transition hover:scale-105 ${project.nominated ? 'bg-legitGold text-background' : 'bg-secondary text-legitGold'} hover:bg-glitch`}
+          className={`mt-2 px-3 py-1 rounded font-heading text-sm shadow transition ${project.nominated ? 'bg-legitGold text-background' : 'bg-secondary text-legitGold'} hover:bg-glitch`}
           onClick={e => { e.stopPropagation(); onNominate(project.id); }}
         >
           {project.nominated ? 'Remove Legit Pick' : 'Nominate as Legit Pick'}
@@ -63,20 +40,20 @@ function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNomina
       )}
       {isAdmin && onDelete && (
         <button
-          className="mt-3 px-3 py-1 rounded bg-red-600 text-white font-bold text-sm shadow hover:bg-red-800 transition"
+          className="mt-2 px-2 py-1 rounded bg-red-600 text-white font-bold text-xs shadow hover:bg-red-800 transition"
           onClick={e => { e.stopPropagation(); onDelete(project.id); }}
         >
           Delete Project
         </button>
       )}
       {onEdit && (
-        <div className="mt-3 flex flex-col gap-1">
+        <div className="mt-2 flex flex-col gap-1">
           <div className="text-center text-xs text-secondary">
             Edits: {project.editCount || 0}/3
           </div>
           {project.editCount < 3 && (
             <button
-              className="px-3 py-1 rounded bg-legitGold text-background font-bold text-sm shadow hover:bg-glitch transition"
+              className="px-2 py-1 rounded bg-legitGold text-background font-bold text-xs shadow hover:bg-glitch transition"
               onClick={e => { e.stopPropagation(); onEdit(project); }}
             >
               Edit Project
@@ -94,14 +71,14 @@ const socials = [
   { href: 'https://twitter.com', label: 'Twitter', icon: <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M22 5.92a8.38 8.38 0 0 1-2.36.65A4.13 4.13 0 0 0 21.4 4.1a8.27 8.27 0 0 1-2.61 1A4.13 4.13 0 0 0 12 8.13c0 .32.04.64.1.94A11.7 11.7 0 0 1 3 4.8a4.13 4.13 0 0 0 1.28 5.5A4.07 4.07 0 0 1 2.8 9.2v.05A4.13 4.13 0 0 0 4.1 13a4.1 4.1 0 0 1-1.85.07A4.13 4.13 0 0 0 6.1 16.1a8.3 8.3 0 0 1-5.13 1.77c-.33 0-.65-.02-.97-.06A11.72 11.72 0 0 0 8.29 21c7.55 0 11.68-6.26 11.68-11.68 0-.18-.01-.36-.02-.54A8.18 8.18 0 0 0 22 5.92Z" stroke="#FFD700" strokeWidth="2"/></svg> },
 ];
 
-// Sticky nav with smooth scroll
+// Simplified nav without backdrop-blur
 function NavBar() {
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur border-b border-secondary flex items-center justify-between py-3 px-8 text-legitGold font-heading text-lg shadow-lg">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-background/95 border-b border-secondary flex items-center justify-between py-3 px-8 text-legitGold font-heading text-lg shadow-md">
       <div className="text-3xl font-heading text-legitGold tracking-wide select-none cursor-pointer" onClick={() => scrollTo('home')}>The Legit</div>
       <div className="flex gap-8">
       <button onClick={() => scrollTo('about')} className="hover:text-glitch transition">About</button>
@@ -119,23 +96,22 @@ function App() {
     submitRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Modernized Hero Section (left-aligned, minimal, professional)
+  // Simplified Hero Section (no fade-in, no glow)
   const homeSection = (
     <section id="home" className="w-full flex flex-col items-start justify-center pl-40 pt-40 min-h-[60vh]">
-      <span className="text-base font-semibold text-glitch mb-2 tracking-widest uppercase animate-fadein" style={{ animationDelay: '0.2s' }}>
+      <span className="text-base font-semibold text-glitch mb-2 tracking-widest uppercase">
         Legit Projects. Legit People. Legit Impact.
       </span>
-      <h1 className="font-heading text-5xl md:text-6xl mb-6 text-legitGold drop-shadow animate-fadein" style={{ animationDelay: '0.3s', lineHeight: 1.1 }}>
+      <h1 className="font-heading text-5xl md:text-6xl mb-6 text-legitGold drop-shadow" style={{ lineHeight: 1.1 }}>
         The Legit:<br />Where Creativity Becomes Legendary
       </h1>
-      <p className="font-body text-text text-lg md:text-xl mb-8 animate-fadein" style={{ animationDelay: '0.4s' }}>
+      <p className="font-body text-text text-lg md:text-xl mb-8">
         Submit your project, vote for your favorites,<br />
         and discover what’s truly legit. Join a community celebrating authenticity, creativity, and action.
       </p>
       <button
         onClick={scrollToSubmit}
-        className="bg-vote text-background font-bold px-8 py-4 rounded-lg shadow-lg hover:bg-glitch transition focus:outline-none focus:ring-2 focus:ring-legitGold animate-glow"
-        style={{ boxShadow: '0 0 16px 2px #FFD700, 0 0 32px 4px #FFD70033' }}
+        className="bg-vote text-background font-bold px-8 py-4 rounded-lg shadow-lg hover:bg-glitch transition focus:outline-none focus:ring-2 focus:ring-legitGold"
       >
         Submit Your Project
       </button>
@@ -145,7 +121,7 @@ function App() {
   // About The Legit section
   const aboutSection = (
     <section id="about" className="w-full flex flex-col items-center justify-center p-8 max-w-3xl mx-auto">
-      <div className="bg-[#181818] border border-legitGold rounded-xl shadow-lg max-w-2xl w-full p-8 flex flex-col items-center animate-fadein">
+      <div className="bg-[#181818] border border-legitGold rounded-xl shadow-lg max-w-2xl w-full p-8 flex flex-col items-center">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-3xl md:text-4xl">🔮</span>
           <h2 className="font-heading text-3xl md:text-4xl text-legitGold drop-shadow">About The Legit</h2>
@@ -242,7 +218,7 @@ function App() {
   });
   const gallerySection = (
     <section id="gallery" className="w-full flex flex-col items-center p-8 max-w-7xl mx-auto">
-      <h1 className="font-heading text-4xl mb-8 text-legitGold animate-fadein">Project Gallery</h1>
+      <h1 className="font-heading text-4xl mb-8 text-legitGold">Project Gallery</h1>
       {/* featured && (
         <div className="mb-12 w-full flex flex-col items-center">
           <div className="w-full max-w-2xl">
@@ -262,9 +238,9 @@ function App() {
       ) */}
 
       {loading ? (
-        <p className="font-body text-secondary animate-fadein">Loading...</p>
+        <p className="font-body text-secondary">Loading...</p>
       ) : projects.length === 0 ? (
-        <p className="font-body text-secondary animate-fadein">No projects submitted yet.</p>
+        <p className="font-body text-secondary">No projects submitted yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 w-full max-w-7xl">
           {Array.isArray(projects) && projects.map((project, idx) => {
@@ -454,8 +430,8 @@ function App() {
       {gallerySection}
       {divider}
       <section id="submit" ref={submitRef} className="w-full flex flex-col items-center justify-center p-8 max-w-2xl mx-auto">
-        <h1 className="font-heading text-4xl mb-4 text-legitGold animate-fadein">Submit Your Project</h1>
-        <div className="bg-[#181818] p-6 rounded-lg shadow-lg mb-4 text-center animate-fadein">
+        <h1 className="font-heading text-4xl mb-4 text-legitGold">Submit Your Project</h1>
+        <div className="bg-[#181818] p-6 rounded-lg shadow-lg mb-4 text-center">
           <p className="font-body text-legitGold text-lg mb-2">
             Submissions Remaining: <span className="font-bold">{typeof userLimits.submissionsRemaining === 'number' ? userLimits.submissionsRemaining : 3}</span> / 3
           </p>
@@ -484,7 +460,7 @@ function App() {
             <p className="font-body text-red-400 text-sm">You have reached your submission limit for this IP address.</p>
           )}
         </div>
-        <form onSubmit={handleSubmit} className="bg-[#181818] p-8 rounded-lg shadow-lg flex flex-col gap-4 w-full max-w-md animate-fadein">
+        <form onSubmit={handleSubmit} className="bg-[#181818] p-8 rounded-lg shadow-lg flex flex-col gap-4 w-full max-w-md">
           <label className="font-body text-secondary">Project Title
             <input name="title" type="text" value={form.title} onChange={handleChange} required className="mt-1 w-full p-2 rounded bg-background text-text border border-secondary focus:border-legitGold outline-none" />
           </label>
