@@ -591,6 +591,10 @@ function Admin() {
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
   const [modalProject, setModalProject] = React.useState(null);
+  const [actionLoading, setActionLoading] = React.useState({});
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const projectsPerPage = 12;
 
   // Fetch all projects (approved and unapproved)
   const fetchAdminProjects = React.useCallback(() => {
@@ -599,10 +603,14 @@ function Admin() {
       .then((res) => res.json())
       .then((data) => {
         setProjects(data);
+        setTotalPages(Math.ceil(data.length / projectsPerPage));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch((err) => {
+        console.error('Error fetching projects:', err);
+        setLoading(false);
+      });
+  }, [projectsPerPage]);
 
   React.useEffect(() => {
     if (!loggedIn) return;
@@ -610,44 +618,72 @@ function Admin() {
   }, [loggedIn, fetchAdminProjects]);
 
   const handleNominate = async (id) => {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/nominate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setProjects((prev) => prev.map((p) => (p.id === id ? data.project : p)));
+    setActionLoading(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/nominate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProjects((prev) => prev.map((p) => (p.id === id ? data.project : p)));
+      }
+    } catch (err) {
+      console.error('Error nominating project:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this project?')) return;
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/` + id, { method: 'DELETE' });
-    if (res.ok) {
-      setProjects((prev) => prev.filter((p) => p.id !== id));
+    setActionLoading(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/` + id, { method: 'DELETE' });
+      if (res.ok) {
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+      }
+    } catch (err) {
+      console.error('Error deleting project:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
   const handleClearVotes = async (id) => {
     if (!window.confirm('Clear all votes for this project?')) return;
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/clear-votes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    if (res.ok) {
-      fetchAdminProjects();
+    setActionLoading(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/clear-votes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        fetchAdminProjects();
+      }
+    } catch (err) {
+      console.error('Error clearing votes:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
   // Approve project
   const handleApprove = async (id) => {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/${id}/approve`, {
-      method: 'PATCH',
-    });
-    if (res.ok) {
-      fetchAdminProjects();
+    setActionLoading(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/projects/${id}/approve`, {
+        method: 'PATCH',
+      });
+      if (res.ok) {
+        fetchAdminProjects();
+      }
+    } catch (err) {
+      console.error('Error approving project:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -688,45 +724,93 @@ function Admin() {
       </div>
     );
 
+  // Calculate paginated projects
+  const startIndex = (currentPage - 1) * projectsPerPage;
+  const endIndex = startIndex + projectsPerPage;
+  const paginatedProjects = projects.slice(startIndex, endIndex);
+
   return (
     <div className="min-h-screen bg-legit-bg text-text flex flex-col items-center p-8">
       <h1 className="font-heading text-4xl mb-8 text-legitGold">Admin Console</h1>
+      <div className="mb-4 text-center">
+        <p className="font-body text-secondary">Total Projects: {projects.length}</p>
+      </div>
       {loading ? (
-        <p className="font-body text-secondary">Loading...</p>
+        <div className="flex items-center justify-center">
+          <p className="font-body text-secondary">Loading projects...</p>
+        </div>
       ) : projects.length === 0 ? (
         <p className="font-body text-secondary">No projects found.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-          {Array.isArray(projects) && projects.map((project, idx) => {
-            if (!project || typeof project !== 'object' || !project.id) {
-              console.warn('Skipping invalid project at index', idx, project);
-              return null;
-            }
-            return (
-              <div key={project.id} className="relative">
-                <ProjectCard
-                  project={project}
-                  voting={{}} // not used in admin
-                  hasVoted={() => false} // not used in admin
-                  onVote={() => {}} // not used in admin
-                  onNominate={handleNominate}
-                  showNominateButton={true}
-                  isAdmin={true}
-                  onDelete={handleDelete}
-                  onClick={() => setModalProject(project)}
-                />
-                {!project.approved && (
-                  <button
-                    className="absolute top-4 left-4 px-4 py-2 rounded bg-legitGold text-background font-heading shadow hover:bg-glitch transition"
-                    onClick={() => handleApprove(project.id)}
-                  >
-                    Approve
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+            {Array.isArray(paginatedProjects) && paginatedProjects.map((project, idx) => {
+              if (!project || typeof project !== 'object' || !project.id) {
+                console.warn('Skipping invalid project at index', idx, project);
+                return null;
+              }
+              return (
+                <div key={project.id} className="relative">
+                  <ProjectCard
+                    project={project}
+                    voting={{}} // not used in admin
+                    hasVoted={() => false} // not used in admin
+                    onVote={() => {}} // not used in admin
+                    onNominate={handleNominate}
+                    showNominateButton={true}
+                    isAdmin={true}
+                    onDelete={handleDelete}
+                    onClick={() => setModalProject(project)}
+                  />
+                  {!project.approved && (
+                    <button
+                      className={`absolute top-4 left-4 px-4 py-2 rounded font-heading shadow transition ${
+                        actionLoading[project.id] 
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                          : 'bg-legitGold text-background hover:bg-glitch'
+                      }`}
+                      onClick={() => handleApprove(project.id)}
+                      disabled={actionLoading[project.id]}
+                    >
+                      {actionLoading[project.id] ? 'Approving...' : 'Approve'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded font-heading shadow transition ${
+                  currentPage === 1 
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                    : 'bg-legitGold text-background hover:bg-glitch'
+                }`}
+              >
+                Previous
+              </button>
+              <span className="font-body text-legitGold">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded font-heading shadow transition ${
+                  currentPage === totalPages 
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                    : 'bg-legitGold text-background hover:bg-glitch'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
       {/* Modal for full project info in admin */}
       {modalProject && (
