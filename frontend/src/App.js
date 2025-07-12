@@ -290,7 +290,7 @@ function App() {
         </div>
       )}
       {/* Modal for full project info */}
-      {/* modalProject && (
+      {modalProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setModalProject(null)}>
           <div className="bg-[#181818] rounded-2xl shadow-2xl p-10 max-w-2xl w-full relative animate-fadein max-h-[80vh] overflow-y-auto" style={{ scrollbarGutter: 'stable' }} onClick={e => e.stopPropagation()}>
             <button className="absolute top-4 right-4 text-legitGold text-2xl font-bold hover:text-glitch" onClick={() => setModalProject(null)}>&times;</button>
@@ -308,7 +308,7 @@ function App() {
             </div>
           </div>
         </div>
-      ) */}
+      )}
       {/* Edit Modal */}
       {/* editingProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" onClick={() => setEditingProject(null)}>
