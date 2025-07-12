@@ -23,39 +23,35 @@ function useFadeInOnScroll() {
 
 // ProjectCard component for gallery
 function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNominateButton, onClick, className, isAdmin, onDelete, onEdit }) {
-  const cardRef = useFadeInOnScroll();
   return (
     <div
-      ref={cardRef}
       onClick={onClick}
-      className={`cursor-pointer bg-[#181818] rounded-2xl shadow-2xl p-12 flex flex-col items-center relative transition-transform duration-200 hover:scale-105 hover:shadow-3xl ${project.nominated ? 'border-4 border-glow-gold' : ''} ${className || ''}`}
-      style={project.nominated ? { boxShadow: '0 0 32px 8px #FFD70099' } : {}}
+      className={`cursor-pointer bg-[#181818] rounded-2xl shadow-lg p-8 flex flex-col items-center relative transition-all duration-200 hover:scale-102 ${project.nominated ? 'border-2 border-legitGold' : ''} ${className || ''}`}
     >
       {project.nominated && (
-        <span className="absolute top-6 right-6 bg-legitGold text-background font-heading px-4 py-2 rounded-full text-base shadow animate-pulse-badge">Legit Pick</span>
+        <span className="absolute top-4 right-4 bg-legitGold text-background font-heading px-3 py-1 rounded-full text-sm shadow">Legit Pick</span>
       )}
       {project.image ? (
-        <img src={project.image} alt={project.title} className="w-48 h-48 object-cover rounded-xl mb-6 shadow-lg" />
+        <img src={project.image} alt={project.title} className="w-40 h-40 object-cover rounded-lg mb-4 shadow" />
       ) : (
-        <div className="w-48 h-48 bg-secondary rounded-xl mb-6 flex items-center justify-center text-background font-accent text-4xl">IMG</div>
+        <div className="w-40 h-40 bg-secondary rounded-lg mb-4 flex items-center justify-center text-background font-accent text-2xl">IMG</div>
       )}
-      <h2 className="font-heading text-3xl text-legitGold mb-3 text-center">{project.title}</h2>
-      <p className="font-body text-secondary text-center mb-6 text-lg">{project.shortDescription}</p>
+      <h2 className="font-heading text-2xl text-legitGold mb-2 text-center">{project.title}</h2>
+      <p className="font-body text-secondary text-center mb-4 text-base">{project.shortDescription}</p>
       <div className="flex items-center gap-2 mb-2">
         <button
-          className="bg-vote text-background font-bold px-6 py-3 rounded-lg shadow hover:bg-glitch transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-legitGold"
+          className="bg-vote text-background font-bold px-4 py-2 rounded shadow hover:bg-glitch transition disabled:opacity-50 focus:outline-none"
           onClick={e => { e.stopPropagation(); onVote(project.id); }}
           disabled={voting[project.id] || hasVoted(project.id)}
           title={hasVoted(project.id) ? 'You have already voted for this project.' : ''}
-          style={{ boxShadow: hasVoted(project.id) ? '0 0 8px 2px #FFD700' : undefined }}
         >
           {voting[project.id] ? 'Voting...' : hasVoted(project.id) ? 'Voted' : 'Vote'}
         </button>
-        <span className="font-body text-legitGold text-xl">{project.votes || 0}</span>
+        <span className="font-body text-legitGold text-lg">{project.votes || 0}</span>
       </div>
       {showNominateButton && (
         <button
-          className={`mt-2 px-4 py-2 rounded font-heading text-base shadow transition hover:scale-105 ${project.nominated ? 'bg-legitGold text-background' : 'bg-secondary text-legitGold'} hover:bg-glitch`}
+          className={`mt-2 px-3 py-1 rounded font-heading text-sm shadow transition ${project.nominated ? 'bg-legitGold text-background' : 'bg-secondary text-legitGold'} hover:bg-glitch`}
           onClick={e => { e.stopPropagation(); onNominate(project.id); }}
         >
           {project.nominated ? 'Remove Legit Pick' : 'Nominate as Legit Pick'}
@@ -63,20 +59,20 @@ function ProjectCard({ project, voting, hasVoted, onVote, onNominate, showNomina
       )}
       {isAdmin && onDelete && (
         <button
-          className="mt-4 px-4 py-2 rounded bg-red-600 text-white font-bold shadow hover:bg-red-800 transition"
+          className="mt-3 px-3 py-1 rounded bg-red-600 text-white font-bold text-sm shadow hover:bg-red-800 transition"
           onClick={e => { e.stopPropagation(); onDelete(project.id); }}
         >
           Delete Project
         </button>
       )}
       {onEdit && (
-        <div className="mt-4 flex flex-col gap-2">
-          <div className="text-center text-sm text-secondary">
+        <div className="mt-3 flex flex-col gap-1">
+          <div className="text-center text-xs text-secondary">
             Edits: {project.editCount || 0}/3
           </div>
           {project.editCount < 3 && (
             <button
-              className="px-4 py-2 rounded bg-legitGold text-background font-bold shadow hover:bg-glitch transition"
+              className="px-3 py-1 rounded bg-legitGold text-background font-bold text-sm shadow hover:bg-glitch transition"
               onClick={e => { e.stopPropagation(); onEdit(project); }}
             >
               Edit Project
@@ -730,7 +726,7 @@ function Admin() {
   const paginatedProjects = projects.slice(startIndex, endIndex);
 
   return (
-    <div className="min-h-screen bg-legit-bg text-text flex flex-col items-center p-8">
+    <div className="min-h-screen bg-background text-text flex flex-col items-center p-6">
       <h1 className="font-heading text-4xl mb-8 text-legitGold">Admin Console</h1>
       <div className="mb-4 text-center">
         <p className="font-body text-secondary">Total Projects: {projects.length}</p>
@@ -743,7 +739,7 @@ function Admin() {
         <p className="font-body text-secondary">No projects found.</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
             {Array.isArray(paginatedProjects) && paginatedProjects.map((project, idx) => {
               if (!project || typeof project !== 'object' || !project.id) {
                 console.warn('Skipping invalid project at index', idx, project);
